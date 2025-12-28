@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Credit Tracker for Genspark",
+  "version": "0.5.3",
+  "description": "Genspark残高を追跡し、消費ペース分析機能を搭載。Actual Pace vs Target Pace表示対応。",
+  
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    },
+    "default_popup": "popup.html",
+    "default_title": "Credit Tracker for Genspark"
+  },
+  
+  "permissions": [
+    "storage"
+  ],
+  
+  "host_permissions": [
+    "https://www.genspark.ai/*"
+  ],
+  
+  "content_scripts": [
+    {
+      "matches": ["https://www.genspark.ai/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

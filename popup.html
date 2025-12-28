@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { width: 320px; font-family: sans-serif; padding: 12px; margin: 0; background: #fdfdfd; }
+    h3 { font-size: 14px; color: #333; border-bottom: 2px solid #4285f4; padding-bottom: 5px; margin-top: 0; }
+    
+    /* Help text at top */
+    .top-help-text { 
+      font-size: 11px; 
+      color: #333; 
+      line-height: 1.6; 
+      margin: 10px 0 15px 0; 
+      padding: 10px; 
+      background: #f0f7ff; 
+      border-radius: 5px;
+      border: 1px solid #d0e3ff;
+    }
+    
+    .highlight {
+      background: linear-gradient(transparent 60%, #a5d6a7 60%);
+      font-weight: 600;
+      font-size: 11.5px;
+      padding: 2px 0;
+    }
+    
+    .highlight-yellow {
+      background: linear-gradient(transparent 60%, #fff59d 60%);
+      font-weight: 600;
+      font-size: 11.5px;
+      padding: 2px 0;
+    }
+    
+    /* Combined green card */
+    .combined-card { 
+      background: #e8f5e9; 
+      padding: 12px; 
+      border-radius: 5px; 
+      margin: 0 0 15px 0; 
+      border: 1px solid #a5d6a7;
+    }
+    
+    /* Date section inside combined card */
+    .date-section { 
+      font-family: monospace;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed #81c784;
+    }
+    .date-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 14px; }
+    .date-row:last-child { margin-bottom: 0; }
+    
+    /* Fixed width labels to align colons */
+    .date-label { width: 160px; color: #555; font-weight: normal; }
+    .date-value-container { display: flex; align-items: center; flex-grow: 1; font-weight: bold; }
+    
+    input[type="number"] { 
+      width: 40px; 
+      padding: 2px 4px; 
+      border: 1px solid #fdba74; 
+      border-radius: 3px; 
+      text-align: center; 
+      font-size: 14px; 
+      font-weight: bold; 
+      font-family: monospace; 
+      background: #fff;
+    }
+    
+    input[type="number"].wide-input {
+      width: 80px;
+    }
+    
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #fb923c;
+      box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.2);
+    }
+    
+    /* Status section inside combined card */
+    .status-section { 
+      font-size: 13px; 
+    }
+    .status-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .status-row:last-child { margin-bottom: 0; }
+    .status-label { color: #555; }
+    .status-value { font-weight: bold; }
+    .divider { margin: 8px 0; border-top: 1px dashed #81c784; }
+    
+    /* 登録ボタン */
+    .action-button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 10px;
+      background: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .action-button:hover {
+      background: #3367d6;
+    }
+    .action-button:active {
+      background: #2451a6;
+    }
+    .action-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    /* Plan Settings Section */
+    .plan-settings-section { 
+      background: #e1f5fe; 
+      padding: 12px; 
+      border-radius: 5px; 
+      margin: 0 0 15px 0; 
+      border: 1px solid #81d4fa;
+    }
+    
+    /* Fixed Daily Limit Section */
+    .fixed-limit-section { background: #fff8e1; padding: 12px; border-radius: 5px; margin: 0 0 15px 0; border: 1px solid #ffe082; }
+    .section-title { font-weight: bold; color: #333; margin-bottom: 8px; font-size: 13px; }
+    .toggle-row { display: flex; align-items: center; margin-bottom: 10px; }
+    .toggle-label { flex-grow: 1; color: #555; font-size: 13px; }
+    .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #4285f4; }
+    input:checked + .slider:before { transform: translateX(20px); }
+    .input-row { display: flex; align-items: center; margin-bottom: 8px; }
+    .input-row label { flex-grow: 1; color: #555; font-size: 13px; }
+    .input-row input[type="number"] { width: 60px; }
+    .help-text { font-size: 11px; color: #666; line-height: 1.4; margin-top: 8px; padding: 8px; background: #fff; border-radius: 3px; }
+    
+    /* Display Settings Section */
+    .display-settings-section { 
+      background: #f3e5f5; 
+      padding: 12px; 
+      border-radius: 5px; 
+      margin: 0 0 15px 0; 
+      border: 1px solid #ce93d8;
+    }
+
+    .display-settings-menu {
+      margin-top: 10px;
+      display: none;
+    }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    .checkbox-row:last-child {
+      margin-bottom: 0;
+    }
+    .checkbox-row input[type="checkbox"] {
+      margin-right: 8px;
+      cursor: pointer;
+    }
+    .checkbox-row label {
+      cursor: pointer;
+      color: #555;
+      flex-grow: 1;
+    }
+    
+    /* デバッグモードセクション */
+    .debug-section { 
+      background: #f5f5f5; 
+      padding: 8px 12px; 
+      border-radius: 3px; 
+      margin: 0; 
+      border: 1px solid #e0e0e0;
+      border-top: 1px dashed #ccc;
+    }
+    .debug-section .toggle-row {
+      margin-bottom: 0;
+    }
+    .debug-section .toggle-label {
+      font-size: 11px;
+      color: #777;
+    }
+    .debug-section .help-text {
+      font-size: 10px;
+      color: #888;
+      margin-top: 6px;
+      padding: 6px;
+      background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+  <h3>Credit Tracker for Genspark</h3>
+
+  <div class="top-help-text">
+    <span class="highlight">Paid users:</span> Set your monthly renewal day and plan start credit below.<br>
+    <span class="highlight-yellow">Free users:</span> Use Fixed Daily Limit Mode at the bottom.
+  </div>
+
+  <div class="combined-card">
+    <div class="date-section">
+      <div class="date-row">
+        <span class="date-label">Monthly Renewal Day:</span>
+        <div class="date-value-container">
+          <span id="datePrefix">0000/00/</span>
+          <input type="number" id="renewalDay" min="1" max="31">
+        </div>
+      </div>
+      <div class="date-row">
+        <span class="date-label">TODAY:</span>
+        <span id="todayDate" class="date-value-container">----/--/--</span>
+      </div>
+    </div>
+
+    <div id="log" class="status-section">Loading...</div>
+    
+    <button id="setDailyStartBtn" class="action-button">
+      Set Current as Daily Start
+    </button>
+  </div>
+
+  <div class="plan-settings-section">
+    <div class="section-title">Plan Settings</div>
+    
+    <div class="input-row">
+      <label for="planStartCredit">Plan Start Credit:</label>
+      <input type="number" id="planStartCredit" class="wide-input" min="1" value="10000">
+    </div>
+    
+    <div class="help-text">
+      Enter your monthly credit amount at plan renewal (default: 10000). This is used to calculate your consumption pace.
+    </div>
+  </div>
+
+  <div class="fixed-limit-section">
+    <div class="section-title">Daily Limit Settings (Legacy)</div>
+    
+    <div class="toggle-row">
+      <span class="toggle-label">Fixed Daily Limit Mode</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="fixedLimitToggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+    
+    <div class="input-row">
+      <label for="fixedLimitValue">Daily Credits:</label>
+      <input type="number" id="fixedLimitValue" min="1" value="100">
+    </div>
+    
+    <div class="help-text">
+      Legacy mode: Turn ON this mode and enter your daily credit amount (default: 100). This is kept for backward compatibility.
+    </div>
+  </div>
+
+<!-- Display Settings Section -->
+<div class="display-settings-section">
+  <div class="toggle-row">
+    <span class="toggle-label">Display Settings</span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="displaySettingsToggle">
+      <span class="slider"></span>
+    </label>
+  </div>
+  
+  <div class="display-settings-menu" id="displaySettingsMenu">
+    <div class="checkbox-row">
+      <input type="checkbox" id="showDailyStart" checked>
+      <label for="showDailyStart">Daily Start</label>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="showCurrentBalance" checked>
+      <label for="showCurrentBalance">Current Balance</label>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="showConsumedToday" checked>
+      <label for="showConsumedToday">Consumed Today</label>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="showSinceLastCheck" checked>
+      <label for="showSinceLastCheck">Since Last Check</label>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="showActualPace" checked>
+      <label for="showActualPace">Actual Pace</label>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="showTargetPace" checked>
+      <label for="showTargetPace">Target Pace</label>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="showDaysInfo" checked>
+      <label for="showDaysInfo">Days Info (elapsed / left)</label>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="showStatus" checked>
+      <label for="showStatus">Status</label>
+    </div>
+  </div>
+  
+  <div class="help-text" style="margin-top: 8px;">
+    Toggle which items to display in the Credit Tracker card. Changes apply instantly.
+  </div>
+</div>
+
+    
+    <div class="help-text" style="margin-top: 8px;">
+      Toggle which items to display in the Credit Tracker card. Changes apply instantly.
+    </div>
+  </div>
+
+  <div class="debug-section">
+    <div class="toggle-row">
+      <span class="toggle-label">Debug Mode (Console Logs)</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="debugModeToggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="help-text">
+      Enable detailed console logs for troubleshooting. Reload page after changing.
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
