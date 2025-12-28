@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const setDailyStartBtn = document.getElementById('setDailyStartBtn');
   const debugModeToggle = document.getElementById('debugModeToggle');
   const planStartCreditInput = document.getElementById('planStartCredit');
+  const viewDiagnosticsBtn = document.getElementById('viewDiagnosticsBtn');
   
   // Display Settings
   const displaySettingsToggle = document.getElementById('displaySettingsToggle');
@@ -243,6 +244,13 @@ Object.keys(displayCheckboxes).forEach(key => {
         if (debugMode) {
           console.log('[Credit Tracker for Genspark] Reload the page to see debug logs');
         }
+      });
+    });
+
+    // View Diagnostics ボタン
+    viewDiagnosticsBtn.addEventListener('click', () => {
+      chrome.tabs.create({
+        url: chrome.runtime.getURL('diagnostic.html')
       });
     });
 
