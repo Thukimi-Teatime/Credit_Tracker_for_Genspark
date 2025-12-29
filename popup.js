@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const fixedLimitToggle = document.getElementById('fixedLimitToggle');
   const fixedLimitValue = document.getElementById('fixedLimitValue');
   const setDailyStartBtn = document.getElementById('setDailyStartBtn');
+  const dailyStartInput = document.getElementById('dailyStartInput');
   const debugModeToggle = document.getElementById('debugModeToggle');
   const planStartCreditInput = document.getElementById('planStartCredit');
   const viewDiagnosticsBtn = document.getElementById('viewDiagnosticsBtn');
@@ -542,13 +543,31 @@ planStartCreditInput.addEventListener('input', () => {
           return;
         }
 
-        if (!data.latest || data.latest.count === undefined) {
-          alert('No current balance data available.');
-          resetButton();
-          return;
+        // 入力フォームの値を取得
+        const inputValue = dailyStartInput.value.trim();
+        let dailyStartValue;
+        
+        if (inputValue === '') {
+          // 入力が空の場合: 現在の残高を使用
+          if (!data.latest || data.latest.count === undefined) {
+            alert('No current balance data available. Please enter a value manually.');
+            resetButton();
+            return;
+          }
+          dailyStartValue = data.latest.count;
+        } else {
+          // 入力がある場合: 入力値を使用
+          dailyStartValue = parseInt(inputValue, 10);
+          
+          // バリデーション
+          if (isNaN(dailyStartValue) || dailyStartValue < 0 || dailyStartValue > 1000000) {
+            alert('Please enter a valid value between 0 and 1,000,000.');
+            resetButton();
+            return;
+          }
         }
 
-        const currentCount = data.latest.count;
+        const currentCount = dailyStartValue;
         const now = new Date();
         const todayStr = formatDate(now);
         const fullTimeStr = now.toLocaleString();
@@ -576,6 +595,9 @@ planStartCreditInput.addEventListener('input', () => {
           
           setDailyStartBtn.textContent = '✓ Done!';
           setDailyStartBtn.style.background = '#34a853';
+          
+          // 入力フォームをクリア
+          dailyStartInput.value = '';
           
           renderUI();
           

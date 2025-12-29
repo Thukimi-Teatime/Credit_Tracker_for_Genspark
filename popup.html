@@ -254,9 +254,23 @@
 
     <div id="log" class="status-section">Loading...</div>
     
-    <button id="setDailyStartBtn" class="action-button">
-      Set Current as Daily Start
-    </button>
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px;">
+      <button id="setDailyStartBtn" class="action-button" style="flex: 0 0 auto; min-width: 140px;">
+        Set as Daily Start
+      </button>
+      <input 
+        type="number" 
+        id="dailyStartInput" 
+        placeholder="Optional"
+        min="0"
+        max="1000000"
+        step="1"
+        style="flex: 1; padding: 6px 8px; border: 1px solid #dadce0; border-radius: 4px; font-size: 13px; text-align: right; width: auto; min-width: 80px;"
+      />
+    </div>
+    <div class="help-text" style="margin-top: 4px;">
+      Enter a value to manually set Daily Start, or leave blank to use current balance
+    </div>
   </div>
 
   <div class="plan-settings-section">
