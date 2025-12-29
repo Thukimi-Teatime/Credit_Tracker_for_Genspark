@@ -316,21 +316,37 @@ monthlyPriceInput.addEventListener('input', () => {
   });
 });
 
-// 小数点桁数の変更
+// 小数点桁数の変更（統合版）
 decimalPlacesSelect.addEventListener('change', () => {
-  const decimalPlaces = parseInt(decimalPlacesSelect.value, 10);
+  // 1. 値を取得（明示的な処理）
+  const value = decimalPlacesSelect.value;
+  const decimalPlaces = (value !== undefined && value !== null && value !== '') 
+    ? parseInt(value, 10) 
+    : 0;
+  
+  // 2. バリデーション
+  if (isNaN(decimalPlaces) || decimalPlaces < 0 || decimalPlaces > 4) {
+    console.error('[Credit Tracker for Genspark] Invalid decimalPlaces:', value);
+    return;
+  }
+  
+  // 3. 保存
   chrome.storage.local.set({ decimalPlaces }, () => {
     if (chrome.runtime.lastError) {
       console.error('[Credit Tracker for Genspark] Failed to save decimal places:', chrome.runtime.lastError);
       return;
     }
+    
+    console.log('[Credit Tracker for Genspark] Saved decimalPlaces:', decimalPlaces);
+    
+    // 4. プレビュー更新
     updateNumericPreview();
     
-    // content.jsに更新通知を送信
+    // 5. content.js に通知
     chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
       if (tabs[0]) {
         chrome.tabs.sendMessage(tabs[0].id, {action: 'updateDisplay'}, (response) => {
-          // エラーは無視
+          // Genspark以外のページではエラーを無視
         });
       }
     });
@@ -377,7 +393,12 @@ planStartCreditInput.addEventListener('input', () => {
     function updateNumericPreview() {
       const monthlyPrice = parseFloat(monthlyPriceInput.value) || 0;
       const planStartCredit = parseInt(planStartCreditInput.value) || 10000;
-      const decimalPlaces = parseInt(decimalPlacesSelect.value) || 1;
+      
+      // decimalPlaces の取得（明示的処理）
+      const value = decimalPlacesSelect.value;
+      const decimalPlaces = (value !== undefined && value !== null && value !== '') 
+        ? parseInt(value, 10) 
+        : 0;
       
       let conversionRate = 0;
       if (planStartCredit > 0) {
@@ -390,43 +411,50 @@ planStartCreditInput.addEventListener('input', () => {
       previewValue.textContent = previewAmount;
     }
 
-    // Numeric Display Settings - Save Settings
-    function saveNumericSettings() {
+
+
+    // Numeric Display Settings - Event Listeners
+    numericDisplayToggle.addEventListener('change', () => {
       const numericDisplayEnabled = numericDisplayToggle.checked;
-      const monthlyPrice = parseFloat(monthlyPriceInput.value) || 0;
-      const decimalPlaces = (decimalPlacesSelect.value !== undefined && decimalPlacesSelect.value !== null && decimalPlacesSelect.value !== '') 
-        ? parseInt(decimalPlacesSelect.value, 10) 
-        : 0;
-      
-      chrome.storage.local.set({
-        numericDisplayEnabled,
-        monthlyPrice,
-        decimalPlaces
-      }, () => {
+      chrome.storage.local.set({ numericDisplayEnabled }, () => {
         if (chrome.runtime.lastError) {
-          console.error('[Credit Tracker for Genspark] Failed to save numeric settings:', chrome.runtime.lastError);
+          console.error('[Credit Tracker for Genspark] Failed to save numericDisplayEnabled:', chrome.runtime.lastError);
           return;
         }
+        console.log('[Credit Tracker for Genspark] Saved numericDisplayEnabled:', numericDisplayEnabled);
         
-        // Update Credit Tracker card
+        // content.js に通知
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           if (tabs[0]) {
             chrome.tabs.sendMessage(tabs[0].id, { action: 'updateDisplay' });
           }
         });
       });
-    }
-
-    // Numeric Display Settings - Event Listeners
-    numericDisplayToggle.addEventListener('change', saveNumericSettings);
+    });
+    
     monthlyPriceInput.addEventListener('input', () => {
-      updateNumericPreview();
-      saveNumericSettings();
+      const monthlyPrice = parseFloat(monthlyPriceInput.value) || 0;
+      chrome.storage.local.set({ monthlyPrice }, () => {
+        if (chrome.runtime.lastError) {
+          console.error('[Credit Tracker for Genspark] Failed to save monthlyPrice:', chrome.runtime.lastError);
+          return;
+        }
+        console.log('[Credit Tracker for Genspark] Saved monthlyPrice:', monthlyPrice);
+        
+        // プレビュー更新
+        updateNumericPreview();
+        
+        // content.js に通知
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs[0]) {
+            chrome.tabs.sendMessage(tabs[0].id, { action: 'updateDisplay' });
+          }
+        });
+      });
     });
-    decimalPlacesSelect.addEventListener('change', () => {
-      updateNumericPreview();
-      saveNumericSettings();
-    });
+    
+    // decimalPlacesSelect のイベントリスナーは既に上で定義済み（統合版）
+    
     planStartCreditInput.addEventListener('change', updateNumericPreview);
 
     // Initialize Numeric Display Settings
