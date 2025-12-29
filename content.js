@@ -53,6 +53,7 @@ const STORAGE_WARNING_INTERVAL = 3600000;
 // 新しい検出システム用の変数
 let detectionAttemptCount = 0;
 let detectedValues = [];
+let detectedStrategies = [];
 const MAX_DETECTION_ATTEMPTS = 8;
 const QUICK_CONFIRM_COUNT = 2;
 const ZERO_CONFIRM_COUNT = 4;
@@ -151,9 +152,8 @@ function getCreditValue() {
       const result = strategies[i]();
       // ★0も有効な値として扱う
       if (result !== null && result !== undefined && result >= 0) {
-        // 成功した戦略をログに記録（デバッグ用）
-        logSuccess(i + 1, result);
-        return result;
+        // 成功した戦略番号と値を返す（ログは後で呼び出し元で記録）
+        return { value: result, strategy: i + 1 };
       }
     } catch (error) {
       // エラーが発生しても次の戦略を試す
@@ -734,6 +734,7 @@ const dropdownObserver = new MutationObserver((mutations) => {
       isClosing = false;
       detectionAttemptCount = 0;
       detectedValues = [];
+      detectedStrategies = [];
       
       // ★測定開始
       detectionStartTime = performance.now();
@@ -770,8 +771,8 @@ const dropdownObserver = new MutationObserver((mutations) => {
           // 要素が完全に消えた
           hasProcessedCurrentPopup = false;
           isClosing = false;
-          detectionAttemptCount = 0;
           detectedValues = [];
+          detectedStrategies = [];
           lastCloseTime = Date.now();
           
           // ★測定終了（確定せずに閉じた場合）
@@ -788,8 +789,10 @@ const dropdownObserver = new MutationObserver((mutations) => {
           debugWarn('[Credit Tracker for Genspark] Element removal timeout - forcing reset');
           hasProcessedCurrentPopup = false;
           isClosing = false;
+      detectedStrategies = [];
           detectionAttemptCount = 0;
           detectedValues = [];
+          detectedStrategies = [];
           lastCloseTime = Date.now();
           detectionStartTime = 0;
         }
@@ -848,9 +851,11 @@ const observer = new MutationObserver(() => {
         
         if (timeSinceLastClose > 1000 || lastCloseTime === 0) {
           isPopupOpen = true;
+      detectedStrategies = [];
           hasProcessedCurrentPopup = false;
           detectionAttemptCount = 0;
           detectedValues = [];
+          detectedStrategies = [];
           
           // ★測定開始（fallback detection）
           detectionStartTime = performance.now();
@@ -891,12 +896,12 @@ const observer = new MutationObserver(() => {
         ? (attemptStartTime - lastAttemptTime).toFixed(1)
         : '0.0';
       
-      const count = getCreditValue();
+      const result = getCreditValue();
       
       // ★検出処理時間を記録
       const attemptDuration = (performance.now() - attemptStartTime).toFixed(2);
       
-      if (count === null) {
+      if (result === null) {
         detectionAttemptCount++;
         debugLog(`[Credit Tracker for Genspark] Detection attempt ${detectionAttemptCount}/${MAX_DETECTION_ATTEMPTS}: null (no value found) [took ${attemptDuration}ms, interval ${timeSinceLastAttempt}ms]`);
         
@@ -921,13 +926,14 @@ const observer = new MutationObserver(() => {
       
       // 値を検出した
       detectionAttemptCount++;
-      detectedValues.push(count);
-      debugLog(`[Credit Tracker for Genspark] Detection attempt ${detectionAttemptCount}/${MAX_DETECTION_ATTEMPTS}: ${count} [took ${attemptDuration}ms, interval ${timeSinceLastAttempt}ms]`);
+      detectedValues.push(result.value);
+      detectedStrategies.push(result.strategy);
+      debugLog(`[Credit Tracker for Genspark] Detection attempt ${detectionAttemptCount}/${MAX_DETECTION_ATTEMPTS}: ${result.value} (Strategy ${result.strategy}) [took ${attemptDuration}ms, interval ${timeSinceLastAttempt}ms]`);
       
       lastAttemptTime = attemptStartTime;
       attemptTimestamps.push({
         attempt: detectionAttemptCount,
-        value: count,
+        value: result.value,
         duration: parseFloat(attemptDuration),
         interval: parseFloat(timeSinceLastAttempt)
       });
@@ -944,6 +950,15 @@ const observer = new MutationObserver(() => {
           console.log(`[Credit Tracker for Genspark] 📊 Detection completed - Total: ${totalTime.toFixed(1)}ms`);
           printDetectionSummary();
           detectionStartTime = 0;
+        }
+        
+        
+        // ★値が確定したので、使用された戦略をログに記録
+        // 確定した値に対応する戦略番号を取得（最後に検出された値の戦略を使用）
+        const confirmedStrategyIndex = detectedValues.lastIndexOf(stableValue);
+        if (confirmedStrategyIndex !== -1 && confirmedStrategyIndex < detectedStrategies.length) {
+          const usedStrategy = detectedStrategies[confirmedStrategyIndex];
+          logSuccess(usedStrategy, stableValue);
         }
         
         processCreditValue(stableValue);
@@ -966,10 +981,12 @@ const observer = new MutationObserver(() => {
     } else {
       // ポップアップが閉じている
       if (isPopupOpen && !isClosing) {
+      detectedStrategies = [];
         isPopupOpen = false;
         hasProcessedCurrentPopup = false;
         detectionAttemptCount = 0;
         detectedValues = [];
+        detectedStrategies = [];
         lastCloseTime = Date.now();
         
         // ★測定終了（fallback close）
