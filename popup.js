@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showStatus: true,
     numericDisplayEnabled: false,
     monthlyPrice: 0,
-    decimalPlaces: 1
+    decimalPlaces: 0
   }, (data) => {
     if (chrome.runtime.lastError) {
       console.error('[Credit Tracker for Genspark] Failed to load settings:', chrome.runtime.lastError);
@@ -260,14 +260,16 @@ function updateNumericPreview() {
   chrome.storage.local.get({
     planStartCredit: 10000,
     monthlyPrice: 0,
-    decimalPlaces: 1
+    decimalPlaces: 0
   }, (data) => {
     const { planStartCredit, monthlyPrice, decimalPlaces } = data;
     const conversionRate = planStartCredit > 0 ? monthlyPrice / planStartCredit : 0;
     const exampleValue = 100 * conversionRate;
     
-    // 確実に数値に変換
-    const decimalPlacesNum = parseInt(decimalPlaces, 10);
+    // 確実に数値に変換（0の場合も正しく処理）
+    const decimalPlacesNum = (decimalPlaces !== undefined && decimalPlaces !== null) 
+      ? parseInt(decimalPlaces, 10) 
+      : 0;
     
     previewRate.textContent = conversionRate.toFixed(6);
     previewValue.textContent = exampleValue.toFixed(decimalPlacesNum);
@@ -429,11 +431,13 @@ planStartCreditInput.addEventListener('input', () => {
     chrome.storage.local.get({
       numericDisplayEnabled: false,
       monthlyPrice: 0,
-      decimalPlaces: 1
+      decimalPlaces: 0
     }, (data) => {
       numericDisplayToggle.checked = data.numericDisplayEnabled;
       monthlyPriceInput.value = data.monthlyPrice;
-      decimalPlacesSelect.value = data.decimalPlaces;
+      decimalPlacesSelect.value = (data.decimalPlaces !== undefined && data.decimalPlaces !== null) 
+        ? data.decimalPlaces 
+        : 0;
       updateNumericPreview();
     });
 
@@ -447,7 +451,7 @@ planStartCreditInput.addEventListener('input', () => {
         planStartCredit: 10000,
         numericDisplayEnabled: false,
         monthlyPrice: 0,
-        decimalPlaces: 1
+        decimalPlaces: 0
       }, (res) => {
         if (chrome.runtime.lastError) {
           console.error('[Credit Tracker for Genspark] Failed to render UI:', chrome.runtime.lastError);

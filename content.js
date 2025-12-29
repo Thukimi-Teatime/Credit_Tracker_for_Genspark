@@ -570,7 +570,7 @@ function updateEmbeddedTracker() {
     showStatus: true,
     numericDisplayEnabled: false,
     monthlyPrice: 0,
-    decimalPlaces: 1
+    decimalPlaces: 0
   }, (res) => {
     if (chrome.runtime.lastError) {
       console.error('[Credit Tracker for Genspark] Failed to update embedded tracker:', chrome.runtime.lastError);
@@ -587,7 +587,9 @@ function updateEmbeddedTracker() {
     // Numeric Display 設定
     const numericDisplayEnabled = res.numericDisplayEnabled;
     const monthlyPrice = parseFloat(res.monthlyPrice) || 0;
-    const decimalPlaces = parseInt(res.decimalPlaces, 10) || 1;
+    const decimalPlaces = (res.decimalPlaces !== undefined && res.decimalPlaces !== null) 
+      ? parseInt(res.decimalPlaces, 10) 
+      : 0;
     const conversionRate = planStartCredit > 0 ? monthlyPrice / planStartCredit : 0;
 
     if (!history || history.length === 0 || !latest) {
@@ -1307,7 +1309,7 @@ function updateSidebarBalance() {
     latest: null,
     numericDisplayEnabled: false,
     monthlyPrice: 0,
-    decimalPlaces: 1,
+    decimalPlaces: 0,
     planStartCredit: 10000
   }, (res) => {
     if (chrome.runtime.lastError) {
@@ -1318,7 +1320,9 @@ function updateSidebarBalance() {
     
     if (res.latest && res.latest.count !== undefined) {
       const monthlyPrice = parseFloat(res.monthlyPrice) || 0;
-      const decimalPlaces = parseInt(res.decimalPlaces, 10) || 1;
+      const decimalPlaces = (res.decimalPlaces !== undefined && res.decimalPlaces !== null) 
+        ? parseInt(res.decimalPlaces, 10) 
+        : 0;
       const planStartCredit = parseInt(res.planStartCredit, 10) || 10000;
       const conversionRate = planStartCredit > 0 ? monthlyPrice / planStartCredit : 0;
       balanceValueDiv.textContent = formatValue(res.latest.count, res.numericDisplayEnabled, conversionRate, decimalPlaces);
