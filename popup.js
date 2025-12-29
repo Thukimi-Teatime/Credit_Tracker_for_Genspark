@@ -394,7 +394,9 @@ planStartCreditInput.addEventListener('input', () => {
     function saveNumericSettings() {
       const numericDisplayEnabled = numericDisplayToggle.checked;
       const monthlyPrice = parseFloat(monthlyPriceInput.value) || 0;
-      const decimalPlaces = parseInt(decimalPlacesSelect.value) || 1;
+      const decimalPlaces = (decimalPlacesSelect.value !== undefined && decimalPlacesSelect.value !== null && decimalPlacesSelect.value !== '') 
+        ? parseInt(decimalPlacesSelect.value, 10) 
+        : 0;
       
       chrome.storage.local.set({
         numericDisplayEnabled,
