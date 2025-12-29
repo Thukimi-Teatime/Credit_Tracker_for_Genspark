@@ -266,8 +266,11 @@ function updateNumericPreview() {
     const conversionRate = planStartCredit > 0 ? monthlyPrice / planStartCredit : 0;
     const exampleValue = 100 * conversionRate;
     
+    // 確実に数値に変換
+    const decimalPlacesNum = parseInt(decimalPlaces, 10);
+    
     previewRate.textContent = conversionRate.toFixed(6);
-    previewValue.textContent = exampleValue.toFixed(decimalPlaces);
+    previewValue.textContent = exampleValue.toFixed(decimalPlacesNum);
   });
 }
 

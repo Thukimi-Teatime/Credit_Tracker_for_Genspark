@@ -541,7 +541,9 @@ function formatValue(credits, numericEnabled, conversionRate, decimalPlaces) {
   }
   
   const value = credits * conversionRate;
-  return value.toFixed(decimalPlaces);
+  // 確実に数値に変換してから toFixed を呼び出す
+  const decimalPlacesNum = parseInt(decimalPlaces, 10);
+  return value.toFixed(decimalPlacesNum);
 }
 
 function updateEmbeddedTracker() {
@@ -584,8 +586,8 @@ function updateEmbeddedTracker() {
     
     // Numeric Display 設定
     const numericDisplayEnabled = res.numericDisplayEnabled;
-    const monthlyPrice = res.monthlyPrice;
-    const decimalPlaces = res.decimalPlaces;
+    const monthlyPrice = parseFloat(res.monthlyPrice) || 0;
+    const decimalPlaces = parseInt(res.decimalPlaces, 10) || 1;
     const conversionRate = planStartCredit > 0 ? monthlyPrice / planStartCredit : 0;
 
     if (!history || history.length === 0 || !latest) {
@@ -1315,8 +1317,11 @@ function updateSidebarBalance() {
     }
     
     if (res.latest && res.latest.count !== undefined) {
-      const conversionRate = res.planStartCredit > 0 ? res.monthlyPrice / res.planStartCredit : 0;
-      balanceValueDiv.textContent = formatValue(res.latest.count, res.numericDisplayEnabled, conversionRate, res.decimalPlaces);
+      const monthlyPrice = parseFloat(res.monthlyPrice) || 0;
+      const decimalPlaces = parseInt(res.decimalPlaces, 10) || 1;
+      const planStartCredit = parseInt(res.planStartCredit, 10) || 10000;
+      const conversionRate = planStartCredit > 0 ? monthlyPrice / planStartCredit : 0;
+      balanceValueDiv.textContent = formatValue(res.latest.count, res.numericDisplayEnabled, conversionRate, decimalPlaces);
     } else {
       balanceValueDiv.textContent = '---';
     }
