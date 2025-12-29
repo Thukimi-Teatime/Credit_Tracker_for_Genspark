@@ -199,6 +199,34 @@
       padding-top: 15px;
       border-top: 1px solid #e0e0e0;
     }
+    
+    /* Numeric Display Settings Section */
+    .numeric-settings-section {
+      background: #fff3e0;
+      padding: 12px;
+      border-radius: 5px;
+      margin: 0 0 15px 0;
+      border: 1px solid #ffcc80;
+    }
+    
+    .numeric-settings-menu {
+      margin-top: 10px;
+      display: none;
+    }
+    
+    .preview-box {
+      background: #e3f2fd;
+      border: 1px solid #90caf9;
+      padding: 8px;
+      margin-top: 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: monospace;
+    }
+    
+    .preview-box strong {
+      font-family: sans-serif;
+    }
   </style>
 </head>
 <body>
@@ -320,6 +348,69 @@
       Toggle which items to display in the Credit Tracker card. Changes apply instantly.
     </div>
   </div>
+
+
+<!-- Numeric Display Settings Section -->
+<div class="numeric-settings-section">
+  <div class="section-title">Numeric Display Settings</div>
+  
+  <!-- Switch 1: Menu Expansion -->
+  <div class="toggle-row">
+    <span class="toggle-label">Numeric Display Settings</span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="numericSettingsToggle">
+      <span class="slider"></span>
+    </label>
+  </div>
+  
+  <!-- Expansion Menu (Default: Hidden) -->
+  <div class="numeric-settings-menu" id="numericSettingsMenu">
+    
+    <!-- Switch 2: Display Mode Toggle -->
+    <div class="toggle-row">
+      <span class="toggle-label">Numeric Display Mode</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="numericDisplayToggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+    
+    <!-- Monthly Price Input -->
+    <div class="input-row">
+      <label for="monthlyPrice">Monthly Price:</label>
+      <input type="number" id="monthlyPrice" class="wide-input" min="0" value="0" step="0.01">
+    </div>
+    
+    <!-- Decimal Places Selection -->
+    <div class="input-row">
+      <label for="decimalPlaces">Decimal Places:</label>
+      <select id="decimalPlaces" style="width: 80px; padding: 4px;">
+        <option value="0">0 (Integer)</option>
+        <option value="1" selected>1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+      </select>
+    </div>
+    
+    <!-- Preview Display -->
+    <div class="preview-box" id="conversionPreview">
+      <strong>Preview:</strong><br>
+      Conversion Rate: <span id="previewRate">0.000000</span><br>
+      100 credits = <span id="previewValue">0.0</span>
+    </div>
+    
+    <!-- Help Text -->
+    <div class="help-text">
+      Enter your monthly plan price. The conversion rate will be automatically calculated as: (monthly price ÷ plan credits).
+      <br><br>
+      <strong>Examples:</strong><br>
+      • Plan: 10000 credits, Price: $19.99 → Rate: 0.001999<br>
+      • Plan: 10000 credits, Price: 2980円 → Rate: 0.298
+    </div>
+    
+  </div>
+</div>
 
   <div class="debug-section">
     <div class="toggle-row">

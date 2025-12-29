@@ -509,6 +509,41 @@ function createEmbeddedTracker() {
 }
 
 // Update embedded tracker content
+/**
+ * Format credit value based on numeric display settings
+ */
+function formatCreditValue(credits, numericDisplayEnabled, monthlyPrice, planStartCredit, decimalPlaces) {
+  if (!numericDisplayEnabled || !monthlyPrice || !planStartCredit || planStartCredit === 0) {
+    return `${credits}`;  // Display as credits
+  }
+  
+  const conversionRate = monthlyPrice / planStartCredit;
+  const numericValue = credits * conversionRate;
+  return numericValue.toFixed(decimalPlaces);
+}
+
+
+// ========================================
+// Numeric Display: フォーマット関数
+// ========================================
+
+/**
+ * クレジット値を表示用にフォーマット
+ * @param {number} credits - クレジット値
+ * @param {boolean} numericEnabled - Numeric Display Mode が有効か
+ * @param {number} conversionRate - 変換レート (1クレジットあたりの金額)
+ * @param {number} decimalPlaces - 小数点以下の桁数 (0-4)
+ * @returns {string} フォーマット済み文字列
+ */
+function formatValue(credits, numericEnabled, conversionRate, decimalPlaces) {
+  if (!numericEnabled || conversionRate <= 0 || credits === null || credits === undefined) {
+    return String(credits);
+  }
+  
+  const value = credits * conversionRate;
+  return value.toFixed(decimalPlaces);
+}
+
 function updateEmbeddedTracker() {
   const contentDiv = document.getElementById('embedded-tracker-content');
   if (!contentDiv) {
@@ -530,7 +565,10 @@ function updateEmbeddedTracker() {
     showActualPace: true,
     showTargetPace: true,
     showDaysInfo: true,
-    showStatus: true
+    showStatus: true,
+    numericDisplayEnabled: false,
+    monthlyPrice: 0,
+    decimalPlaces: 1
   }, (res) => {
     if (chrome.runtime.lastError) {
       console.error('[Credit Tracker for Genspark] Failed to update embedded tracker:', chrome.runtime.lastError);
@@ -543,6 +581,12 @@ function updateEmbeddedTracker() {
     const renewalDay = res.renewalDay;
     const previousBalance = res.previousBalance;
     const planStartCredit = res.planStartCredit;
+    
+    // Numeric Display 設定
+    const numericDisplayEnabled = res.numericDisplayEnabled;
+    const monthlyPrice = res.monthlyPrice;
+    const decimalPlaces = res.decimalPlaces;
+    const conversionRate = planStartCredit > 0 ? monthlyPrice / planStartCredit : 0;
 
     if (!history || history.length === 0 || !latest) {
       contentDiv.innerHTML = '<div style="color:#d8b4fe;">No data available yet.</div>';
@@ -629,28 +673,28 @@ function updateEmbeddedTracker() {
     const dailyStartHTML = res.showDailyStart ? `
   <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #c4b5fd;">
     <span>Daily Start:</span>
-    <span style="font-weight: bold;">${firstCountToday}</span>
+    <span style="font-weight: bold;">${formatValue(firstCountToday, numericDisplayEnabled, conversionRate, decimalPlaces)}</span>
   </div>
     ` : '';
 
     const currentBalanceHTML = res.showCurrentBalance ? `
   <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #c4b5fd;">
     <span>Current Balance:</span>
-    <span style="font-weight: bold;">${currentCount}</span>
+    <span style="font-weight: bold;">${formatValue(currentCount, numericDisplayEnabled, conversionRate, decimalPlaces)}</span>
   </div>
     ` : '';
 
     const consumedTodayHTML = res.showConsumedToday ? `
   <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #fca5a5;">
     <span>Consumed Today:</span>
-    <span style="font-weight: bold;">-${consumed}</span>
+    <span style="font-weight: bold;">-${formatValue(consumed, numericDisplayEnabled, conversionRate, decimalPlaces)}</span>
   </div>
     ` : '';
 
     const sinceLastCheckHTML = res.showSinceLastCheck ? `
   <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #fdba74;">
     <span>Since Last Check:</span>
-    <span style="font-weight: bold;">-${sinceLastCheck}</span>
+    <span style="font-weight: bold;">-${formatValue(sinceLastCheck, numericDisplayEnabled, conversionRate, decimalPlaces)}</span>
   </div>
     ` : '';
 
@@ -662,7 +706,7 @@ function updateEmbeddedTracker() {
       bottomSectionHTML = `
   <div style="display: flex; justify-content: space-between; margin-bottom: 2px; color: #67e8f9;">
     <span style="font-weight: bold;">Daily Limit:</span>
-    <span style="font-weight: bold;">${fixedLimitValue} /day</span>
+    <span style="font-weight: bold;">${formatValue(fixedLimitValue, numericDisplayEnabled, conversionRate, decimalPlaces)} /day</span>
   </div>
   `;
     } else {
@@ -670,14 +714,14 @@ function updateEmbeddedTracker() {
       const actualPaceHTML = res.showActualPace ? `
   <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #67e8f9;">
     <span>Actual Pace:</span>
-    <span style="font-weight: bold;">${actualPace} /day</span>
+    <span style="font-weight: bold;">${formatValue(actualPace, numericDisplayEnabled, conversionRate, decimalPlaces)} /day</span>
   </div>
     ` : '';
 
       const targetPaceHTML = res.showTargetPace ? `
   <div style="display: flex; justify-content: space-between; margin-bottom: 2px; color: #a5b4fc;">
     <span>Target Pace:</span>
-    <span style="font-weight: bold;">${targetPace} /day</span>
+    <span style="font-weight: bold;">${formatValue(targetPace, numericDisplayEnabled, conversionRate, decimalPlaces)} /day</span>
   </div>
     ` : '';
 
@@ -1257,7 +1301,13 @@ function updateSidebarBalance() {
   const balanceValueDiv = document.getElementById('balance-value-sidebar');
   if (!balanceValueDiv) return;
   
-  chrome.storage.local.get({ latest: null }, (res) => {
+  chrome.storage.local.get({ 
+    latest: null,
+    numericDisplayEnabled: false,
+    monthlyPrice: 0,
+    decimalPlaces: 1,
+    planStartCredit: 10000
+  }, (res) => {
     if (chrome.runtime.lastError) {
       console.error('[Credit Tracker for Genspark] Failed to update sidebar balance:', chrome.runtime.lastError);
       balanceValueDiv.textContent = 'ERROR';
@@ -1265,7 +1315,8 @@ function updateSidebarBalance() {
     }
     
     if (res.latest && res.latest.count !== undefined) {
-      balanceValueDiv.textContent = res.latest.count;
+      const conversionRate = res.planStartCredit > 0 ? res.monthlyPrice / res.planStartCredit : 0;
+      balanceValueDiv.textContent = formatValue(res.latest.count, res.numericDisplayEnabled, conversionRate, res.decimalPlaces);
     } else {
       balanceValueDiv.textContent = '---';
     }
