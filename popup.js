@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showSinceLastCheck: document.getElementById('showSinceLastCheck'),
     showActualPace: document.getElementById('showActualPace'),
     showTargetPace: document.getElementById('showTargetPace'),
+    showDaysAhead: document.getElementById('showDaysAhead'),
     showDaysInfo: document.getElementById('showDaysInfo'),
     showStatus: document.getElementById('showStatus')
   };
@@ -131,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showSinceLastCheck: true,
     showActualPace: true,
     showTargetPace: true,
+    showDaysAhead: true,
     showDaysInfo: true,
     showStatus: true,
     numericDisplayEnabled: false,
@@ -164,7 +166,7 @@ const updateDisplaySettingsState = () => {
   const isFixedMode = fixedLimitToggle.checked;
   
   // Fixed Mode の場合、特定の項目を無効化
-  const itemsToDisable = ['showActualPace', 'showTargetPace', 'showDaysInfo', 'showStatus'];
+  const itemsToDisable = ['showActualPace', 'showTargetPace', 'showDaysAhead', 'showDaysInfo', 'showStatus'];
   
   itemsToDisable.forEach(key => {
     const checkbox = displayCheckboxes[key];

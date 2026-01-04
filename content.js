@@ -566,6 +566,7 @@ function updateEmbeddedTracker() {
     showSinceLastCheck: true,
     showActualPace: true,
     showTargetPace: true,
+    showDaysAhead: true,
     showDaysInfo: true,
     showStatus: true,
     numericDisplayEnabled: false,
@@ -729,6 +730,45 @@ function updateEmbeddedTracker() {
   </div>
     ` : '';
 
+      // Days Ahead/Behind 計算
+      let daysAheadHTML = '';
+      if (res.showDaysAhead) {
+        if (targetPace === 0) {
+          daysAheadHTML = `
+  <div style="display: flex; justify-content: space-between; margin-bottom: 2px; color: #6b7280;">
+    <span>Days Ahead/Behind:</span>
+    <span style="font-weight: bold;">N/A</span>
+  </div>
+    `;
+        } else {
+          // 今日の理想残高を計算
+          const idealBalanceToday = planStartCredit - (targetPace * daysElapsed);
+          // 実際残高との差分
+          const creditDifference = currentCount - idealBalanceToday;
+          // 日数換算
+          const daysDifference = creditDifference / targetPace;
+          
+          // 表示フォーマット（Numeric Display Settings適用）
+          const formattedDays = Math.abs(daysDifference).toFixed(decimalPlaces);
+          
+          let displayText, displayColor;
+          if (daysDifference >= 0) {
+            displayText = `+${formattedDays} day`;
+            displayColor = '#007bff'; // 青色：先行
+          } else {
+            displayText = `-${formattedDays} day`;
+            displayColor = '#dc3545'; // 赤色：遅延
+          }
+          
+          daysAheadHTML = `
+  <div style="display: flex; justify-content: space-between; margin-bottom: 2px; color: ${displayColor};">
+    <span>Days Ahead/Behind:</span>
+    <span style="font-weight: bold;">${displayText}</span>
+  </div>
+    `;
+        }
+      }
+
       const daysInfoHTML = res.showDaysInfo ? `
   <div style="font-size: 10px; color: #c4b5fd; text-align: right; margin-top: 2px;">
     (${daysElapsed} days elapsed / ${daysLeft} days left)
@@ -742,7 +782,7 @@ function updateEmbeddedTracker() {
   </div>
     ` : '';
 
-      bottomSectionHTML = actualPaceHTML + targetPaceHTML + daysInfoHTML + statusHTML;
+      bottomSectionHTML = actualPaceHTML + targetPaceHTML + daysAheadHTML + daysInfoHTML + statusHTML;
     }
 
     // 区切り線の表示判定
