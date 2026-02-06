@@ -1,15 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Credit Tracker for Genspark",
-  "version": "0.6.1",
-  "description": "Genspark残高を追跡し、消費ペース分析機能を搭載。Actual Pace vs Target Pace表示対応。",
-  
+  "version": "0.6.7",
+  "description": "Track Genspark balance and visualize consumption pace.",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  
   "action": {
     "default_icon": {
       "16": "icons/icon16.png",
@@ -18,19 +16,48 @@
     "default_popup": "popup.html",
     "default_title": "Credit Tracker for Genspark"
   },
-  
   "permissions": [
     "storage"
   ],
-  
+  "options_page": "popup.html",
+  "background": {
+    "service_worker": "scripts/background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "popup.html",
+        "popup.js",
+        "scripts/content/init.js",
+        "scripts/content/modules/ui-common.js",
+        "scripts/content/modules/metrics-calculator.js"
+      ],
+      "matches": [
+        "https://www.genspark.ai/*"
+      ]
+    }
+  ],
   "host_permissions": [
     "https://www.genspark.ai/*"
   ],
-  
   "content_scripts": [
     {
-      "matches": ["https://www.genspark.ai/*"],
-      "js": ["content.js"],
+      "matches": [
+        "https://www.genspark.ai/*"
+      ],
+      "js": [
+        "scripts/content/init.js",
+        "scripts/content/utils/logger.js",
+        "scripts/content/utils/storage.js",
+        "scripts/content/modules/credit-calculator.js",
+        "scripts/content/modules/ui-common.js",
+        "scripts/content/modules/metrics-calculator.js",
+        "scripts/content/modules/ui-embedded.js",
+        "scripts/content/modules/ui-sidebar.js",
+        "scripts/content/modules/ui-graph.js",
+        "scripts/content/modules/metrics-calculator.js",
+        "scripts/content/main.js"
+      ],
       "run_at": "document_idle"
     }
   ]

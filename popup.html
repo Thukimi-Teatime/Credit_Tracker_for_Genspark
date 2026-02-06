@@ -1,93 +1,187 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <style>
-    body { width: 320px; font-family: sans-serif; padding: 12px; margin: 0; background: #fdfdfd; }
-    h3 { font-size: 14px; color: #333; border-bottom: 2px solid #4285f4; padding-bottom: 5px; margin-top: 0; }
-    
-    /* Help text at top */
-    .top-help-text { 
-      font-size: 11px; 
-      color: #333; 
-      line-height: 1.6; 
-      margin: 10px 0 15px 0; 
-      padding: 10px; 
-      background: #f0f7ff; 
-      border-radius: 5px;
-      border: 1px solid #d0e3ff;
+    body {
+      width: 640px;
+      height: 580px;
+      font-family: sans-serif;
+      margin: 0;
+      background: #fdfdfd;
+      overflow: hidden;
     }
-    
-    .highlight {
-      background: linear-gradient(transparent 60%, #a5d6a7 60%);
-      font-weight: 600;
-      font-size: 11.5px;
-      padding: 2px 0;
+
+    .main-container {
+      display: flex;
+      height: 100%;
     }
-    
-    .highlight-yellow {
-      background: linear-gradient(transparent 60%, #fff59d 60%);
-      font-weight: 600;
-      font-size: 11.5px;
-      padding: 2px 0;
+
+    /* Left Column: Fixed Preview */
+    .preview-column {
+      flex: 0 0 190px;
+      background: #1e1b4b;
+      padding: 15px 10px;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #312e81;
+      overflow-y: auto;
     }
-    
+
+    .preview-header {
+      font-size: 11px;
+      color: #818cf8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 15px;
+      text-align: center;
+      border-bottom: 1px solid #312e81;
+      padding-bottom: 8px;
+    }
+
+    /* Embedded Tracker Look */
+    .embedded-tracker-container {
+      padding: 12px 10px;
+      background: linear-gradient(135deg, #4c1d95 0%, #3b0764 100%);
+      border-radius: 8px;
+      border: 1px solid #6b21a8;
+      font-size: 11px;
+      font-family: sans-serif;
+      box-shadow: 0 2px 8px rgba(59, 7, 100, 0.4);
+      color: white;
+    }
+
+    .embedded-tracker-title {
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #ffffff;
+      font-size: 13px;
+      border-bottom: 2px solid #7c3aed;
+      padding-bottom: 4px;
+    }
+
+    /* Right Column: Scrollable Settings */
+    .settings-column {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      height: 100%;
+      background: #ffffff;
+    }
+
+    h3 {
+      font-size: 16px;
+      color: #1e293b;
+      margin-top: 0;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3::after {
+      content: '';
+      flex: 1;
+      height: 2px;
+      background: #4285f4;
+      border-radius: 2px;
+    }
+
     /* Combined green card */
-    .combined-card { 
-      background: #e8f5e9; 
-      padding: 12px; 
-      border-radius: 5px; 
-      margin: 0 0 15px 0; 
+    .combined-card {
+      background: #e8f5e9;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 0 0 15px 0;
       border: 1px solid #a5d6a7;
     }
-    
+
     /* Date section inside combined card */
-    .date-section { 
+    .date-section {
       font-family: monospace;
       margin-bottom: 12px;
       padding-bottom: 12px;
       border-bottom: 1px dashed #81c784;
     }
-    .date-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 14px; }
-    .date-row:last-child { margin-bottom: 0; }
-    
+
+    .date-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .date-row:last-child {
+      margin-bottom: 0;
+    }
+
     /* Fixed width labels to align colons */
-    .date-label { width: 160px; color: #555; font-weight: normal; }
-    .date-value-container { display: flex; align-items: center; flex-grow: 1; font-weight: bold; }
-    
-    input[type="number"] { 
-      width: 40px; 
-      padding: 2px 4px; 
-      border: 1px solid #fdba74; 
-      border-radius: 3px; 
-      text-align: center; 
-      font-size: 14px; 
-      font-weight: bold; 
-      font-family: monospace; 
+    .date-label {
+      width: 100px;
+      color: #555;
+      font-weight: normal;
+    }
+
+    .date-value-container {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-grow: 1;
+      font-weight: bold;
+    }
+
+    input[type="number"] {
+      width: 40px;
+      padding: 2px 4px;
+      border: 1px solid #fdba74;
+      border-radius: 3px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: bold;
+      font-family: monospace;
       background: #fff;
     }
-    
+
     input[type="number"].wide-input {
       width: 80px;
     }
-    
+
     input[type="number"]:focus {
       outline: none;
       border-color: #fb923c;
       box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.2);
     }
-    
+
     /* Status section inside combined card */
-    .status-section { 
-      font-size: 13px; 
+    .status-section {
+      font-size: 12px;
     }
-    .status-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .status-row:last-child { margin-bottom: 0; }
-    .status-label { color: #555; }
-    .status-value { font-weight: bold; }
-    .divider { margin: 8px 0; border-top: 1px dashed #81c784; }
-    
-    /* 登録ボタン */
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .status-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .status-label {
+      color: #555;
+    }
+
+    .status-value {
+      font-weight: bold;
+    }
+
+    .divider {
+      margin: 6px 0;
+      border-top: 1px dashed #81c784;
+    }
+
+    /* Register button */
     .action-button {
       width: 100%;
       padding: 8px;
@@ -101,48 +195,125 @@
       cursor: pointer;
       transition: background 0.2s;
     }
+
     .action-button:hover {
       background: #3367d6;
     }
+
     .action-button:active {
       background: #2451a6;
     }
+
     .action-button:disabled {
       background: #ccc;
       cursor: not-allowed;
     }
-    
+
     /* Plan Settings Section */
-    .plan-settings-section { 
-      background: #e1f5fe; 
-      padding: 12px; 
-      border-radius: 5px; 
-      margin: 0 0 15px 0; 
+    .plan-settings-section {
+      background: #e1f5fe;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 0 0 15px 0;
       border: 1px solid #81d4fa;
     }
-    
-    /* Fixed Daily Limit Section */
-    .fixed-limit-section { background: #fff8e1; padding: 12px; border-radius: 5px; margin: 0 0 15px 0; border: 1px solid #ffe082; }
-    .section-title { font-weight: bold; color: #333; margin-bottom: 8px; font-size: 13px; }
-    .toggle-row { display: flex; align-items: center; margin-bottom: 10px; }
-    .toggle-label { flex-grow: 1; color: #555; font-size: 13px; }
-    .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
-    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-    input:checked + .slider { background-color: #4285f4; }
-    input:checked + .slider:before { transform: translateX(20px); }
-    .input-row { display: flex; align-items: center; margin-bottom: 8px; }
-    .input-row label { flex-grow: 1; color: #555; font-size: 13px; }
-    .input-row input[type="number"] { width: 60px; }
-    .help-text { font-size: 11px; color: #666; line-height: 1.4; margin-top: 8px; padding: 8px; background: #fff; border-radius: 3px; }
-    
+
+    .section-title {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .toggle-label {
+      flex-grow: 1;
+      color: #555;
+      font-size: 13px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked+.slider {
+      background-color: #4285f4;
+    }
+
+    input:checked+.slider:before {
+      transform: translateX(20px);
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .input-row label {
+      flex-grow: 1;
+      color: #555;
+      font-size: 13px;
+    }
+
+    .input-row input[type="number"] {
+      width: 60px;
+    }
+
+    .help-text {
+      font-size: 11px;
+      color: #666;
+      line-height: 1.4;
+      margin-top: 8px;
+      padding: 8px;
+      background: #f8fafc;
+      border-radius: 4px;
+    }
+
     /* Display Settings Section */
-    .display-settings-section { 
-      background: #f3e5f5; 
-      padding: 12px; 
-      border-radius: 5px; 
-      margin: 0 0 15px 0; 
+    .display-settings-section {
+      background: #f3e5f5;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 0 0 15px 0;
       border: 1px solid #ce93d8;
     }
 
@@ -150,309 +321,269 @@
       margin-top: 10px;
       display: none;
     }
+
     .checkbox-row {
       display: flex;
       align-items: center;
       margin-bottom: 6px;
       font-size: 12px;
     }
+
     .checkbox-row:last-child {
       margin-bottom: 0;
     }
+
     .checkbox-row input[type="checkbox"] {
       margin-right: 8px;
       cursor: pointer;
     }
+
     .checkbox-row label {
       cursor: pointer;
       color: #555;
       flex-grow: 1;
     }
-    
-    /* デバッグモードセクション */
-    .debug-section { 
-      background: #f5f5f5; 
-      padding: 8px 12px; 
-      border-radius: 3px; 
-      margin: 0; 
+
+    /* Debug mode section */
+    .debug-section {
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 0 0 15px 0;
       border: 1px solid #e0e0e0;
-      border-top: 1px dashed #ccc;
     }
-    .debug-section .toggle-row {
-      margin-bottom: 0;
-    }
-    .debug-section .toggle-label {
-      font-size: 11px;
-      color: #777;
-    }
-    .debug-section .help-text {
-      font-size: 10px;
-      color: #888;
-      margin-top: 6px;
-      padding: 6px;
-      background: #fafafa;
-    }
-    
+
     /* Diagnostic Section */
     .diagnostic-section {
       margin-top: 15px;
       padding-top: 15px;
       border-top: 1px solid #e0e0e0;
     }
-    
+
     /* Numeric Display Settings Section */
     .numeric-settings-section {
       background: #fff3e0;
       padding: 12px;
-      border-radius: 5px;
+      border-radius: 8px;
       margin: 0 0 15px 0;
       border: 1px solid #ffcc80;
     }
-    
+
     .numeric-settings-menu {
       margin-top: 10px;
       display: none;
     }
-    
+
     .preview-box {
       background: #e3f2fd;
       border: 1px solid #90caf9;
       padding: 8px;
       margin-top: 8px;
-      border-radius: 3px;
+      border-radius: 4px;
       font-size: 11px;
       font-family: monospace;
     }
-    
+
     .preview-box strong {
       font-family: sans-serif;
     }
+
+    /* Preset Buttons */
+    .preset-container {
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .preset-button {
+      padding: 8px 12px;
+      background: rgba(129, 140, 248, 0.1);
+      border: 1px solid rgba(129, 140, 248, 0.3);
+      border-radius: 6px;
+      color: #c7d2fe;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      letter-spacing: 0.05em;
+    }
+
+    .preset-button:hover {
+      background: rgba(129, 140, 248, 0.2);
+      border-color: rgba(129, 140, 248, 0.5);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .preset-button:active {
+      transform: translateY(0);
+      background: rgba(129, 140, 248, 0.3);
+    }
+
+    .preset-button.active {
+      background: #4f46e5;
+      border-color: #6366f1;
+      color: white;
+      box-shadow: 0 0 10px rgba(79, 70, 229, 0.4);
+    }
   </style>
 </head>
+
 <body>
-  <h3>Credit Tracker for Genspark</h3>
+  <div class="main-container">
+    <!-- Left Column: Live Preview -->
+    <div class="preview-column">
+      <div class="preview-header">Live Preview (Embedded)</div>
 
-  <div class="top-help-text">
-    <span class="highlight">Paid users:</span> Set your monthly renewal day and plan start credit below.<br>
-    <span class="highlight-yellow">Free users:</span> Use Fixed Daily Limit Mode at the bottom.
-  </div>
+      <div class="preset-container">
+        <button id="presetAll" class="preset-button">ALL PRESET</button>
+        <button id="presetPace" class="preset-button">PACE BASE</button>
+        <button id="presetDay" class="preset-button">DAY BASE</button>
+      </div>
 
-  <div class="combined-card">
-    <div class="date-section">
-      <div class="date-row">
-        <span class="date-label">Monthly Renewal Day:</span>
-        <div class="date-value-container">
-          <span id="datePrefix">0000/00/</span>
-          <input type="number" id="renewalDay" min="1" max="31">
+      <div class="embedded-tracker-container">
+        <div class="embedded-tracker-title">Credit Tracker</div>
+        <div id="embedded-tracker-preview">Loading...</div>
+      </div>
+      <div class="help-text" style="color: #94a3b8; margin-top: 15px; background: transparent; text-align: center;">
+        This is how it looks on the page.
+      </div>
+    </div>
+
+    <!-- Right Column: Settings -->
+    <div class="settings-column">
+      <h3>Genspark Tracker Settings</h3>
+
+      <div class="combined-card">
+        <div class="date-section">
+          <div class="date-row">
+            <span class="date-label">Renewal Day:</span>
+            <div class="date-value-container">
+              <span id="datePrefix">0000/00/</span>
+              <input type="number" id="renewalDay" min="1" max="31">
+            </div>
+          </div>
+          <div class="date-row">
+            <span class="date-label">Today:</span>
+            <span id="todayDate" class="date-value-container">----/--/--</span>
+          </div>
+        </div>
+
+        <div id="log" class="status-section">Loading...</div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px;">
+          <button id="setDailyStartBtn" class="action-button"
+            style="flex: 0 0 auto; width: 110px; padding: 8px 4px; margin-top: 0;">
+            Set Daily Start
+          </button>
+          <input type="number" id="dailyStartInput" placeholder="Override if needed" min="0" max="1000000" step="1"
+            style="flex: 1; padding: 6px 8px; border: 1px solid #dadce0; border-radius: 4px; font-size: 13px; text-align: right;" />
         </div>
       </div>
-      <div class="date-row">
-        <span class="date-label">TODAY:</span>
-        <span id="todayDate" class="date-value-container">----/--/--</span>
+
+      <!-- Plan Settings -->
+      <div class="plan-settings-section">
+        <div class="section-title">Plan Configuration</div>
+        <div class="input-row">
+          <label for="planStartCredit">Monthly Base Credits:</label>
+          <input type="number" id="planStartCredit" class="wide-input" min="1">
+        </div>
+        <div class="input-row">
+          <label for="purchasedCredits">Purchased Credits (Add-on):</label>
+          <input type="number" id="purchasedCredits" class="wide-input" min="0">
+        </div>
+        <div class="help-text">
+          Purchased credits are usually valid for 3 months. <br>
+          Please manually adjust this value upon monthly renewal to maintain calculation accuracy.
+        </div>
+      </div>
+
+      <!-- Display Settings Section -->
+      <div class="display-settings-section">
+        <div class="toggle-row">
+          <span class="section-title" style="margin-bottom:0;">Display Toggles</span>
+        </div>
+
+        <div class="display-settings-menu" id="displaySettingsMenu" style="display: block;">
+          <div class="checkbox-row"><input type="checkbox" id="showDailyStart"><label for="showDailyStart">Daily
+              Start</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="showCurrentBalance"><label
+              for="showCurrentBalance">Current Credit</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="showConsumedToday"><label
+              for="showConsumedToday">Consumed Today</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="showSinceLastCheck"><label for="showSinceLastCheck">Since
+              Last Check</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="showActualPace"><label for="showActualPace">Actual
+              Pace</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="showTargetPace"><label for="showTargetPace">Target
+              Pace</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="showDaysAhead"><label for="showDaysAhead">Days
+              Ahead/Behind</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="showDaysInfo"><label for="showDaysInfo">Days Elapsed /
+              Left</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="showStatus"><label for="showStatus">Overall
+              Status</label></div>
+        </div>
+      </div>
+
+      <div class="numeric-settings-section">
+        <div class="toggle-row" style="justify-content: space-between;">
+          <span class="section-title" style="margin-bottom:0;">Price Conversion</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="numericDisplayToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="numeric-settings-menu" id="numericSettingsMenu" style="display: block;">
+          <div class="input-row">
+            <label for="monthlyPrice">Monthly Fee:</label>
+            <input type="number" id="monthlyPrice" class="wide-input" step="0.01">
+          </div>
+          <div class="input-row">
+            <label for="decimalPlaces">Decimal Places:</label>
+            <select id="decimalPlaces"
+              style="width: 80px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px;">
+              <option value="0">0 (Integer)</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          <div class="preview-box" id="conversionPreview">
+            <strong>Preview:</strong><br>
+            Rate: <span id="previewRate">0.000000</span> / credit<br>
+            100 credits = <span id="previewValue">0.00</span> ($, €, ¥, £, CNY, EUR, etc.)
+          </div>
+        </div>
+      </div>
+
+      <!-- Debug & Diagnostics -->
+      <div class="debug-section">
+        <div class="toggle-row" style="margin-bottom:0;">
+          <span class="toggle-label">Debug Mode (Console)</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="debugModeToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="diagnostic-section">
+          <button id="viewDiagnosticsBtn" class="action-button" style="background: #5f6368; margin-top: 0;">
+            View Diagnostic Logs
+          </button>
+        </div>
       </div>
     </div>
-
-    <div id="log" class="status-section">Loading...</div>
-    
-    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px;">
-      <button id="setDailyStartBtn" class="action-button" style="flex: 0 0 auto; width: 110px; padding: 8px 4px; font-size: 12px;">
-        Set as Daily Start
-      </button>
-      <input 
-        type="number" 
-        id="dailyStartInput" 
-        placeholder="Optional"
-        min="0"
-        max="1000000"
-        step="1"
-        style="flex: 0 0 auto; width: 90px; padding: 6px 8px; border: 1px solid #dadce0; border-radius: 4px; font-size: 13px; text-align: right;"
-      />
-    </div>
-    <div class="help-text" style="margin-top: 4px;">
-      Enter a value to manually set Daily Start, or leave blank to use current balance
-    </div>
   </div>
 
-  <div class="plan-settings-section">
-    <div class="section-title">Plan Settings</div>
-    
-    <div class="input-row">
-      <label for="planStartCredit">Plan Start Credit:</label>
-      <input type="number" id="planStartCredit" class="wide-input" min="1" value="10000">
-    </div>
-    
-    <div class="help-text">
-      Enter your monthly credit amount at plan renewal (default: 10000). This is used to calculate your consumption pace.
-    </div>
-  </div>
-
-  <div class="fixed-limit-section">
-    <div class="section-title">Daily Limit Settings (Legacy)</div>
-    
-    <div class="toggle-row">
-      <span class="toggle-label">Fixed Daily Limit Mode</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="fixedLimitToggle">
-        <span class="slider"></span>
-      </label>
-    </div>
-    
-    <div class="input-row">
-      <label for="fixedLimitValue">Daily Credits:</label>
-      <input type="number" id="fixedLimitValue" min="1" value="100">
-    </div>
-    
-    <div class="help-text">
-      Legacy mode: Turn ON this mode and enter your daily credit amount (default: 100). This is kept for backward compatibility.
-    </div>
-  </div>
-
-<!-- Display Settings Section -->
-<div class="display-settings-section">
-  <div class="toggle-row">
-    <span class="toggle-label">Display Settings</span>
-    <label class="toggle-switch">
-      <input type="checkbox" id="displaySettingsToggle">
-      <span class="slider"></span>
-    </label>
-  </div>
-  
-  <div class="display-settings-menu" id="displaySettingsMenu">
-    <div class="checkbox-row">
-      <input type="checkbox" id="showDailyStart" checked>
-      <label for="showDailyStart">Daily Start</label>
-    </div>
-    <div class="checkbox-row">
-      <input type="checkbox" id="showCurrentBalance" checked>
-      <label for="showCurrentBalance">Current Balance</label>
-    </div>
-    <div class="checkbox-row">
-      <input type="checkbox" id="showConsumedToday" checked>
-      <label for="showConsumedToday">Consumed Today</label>
-    </div>
-    <div class="checkbox-row">
-      <input type="checkbox" id="showSinceLastCheck" checked>
-      <label for="showSinceLastCheck">Since Last Check</label>
-    </div>
-    <div class="checkbox-row">
-      <input type="checkbox" id="showActualPace" checked>
-      <label for="showActualPace">Actual Pace</label>
-    </div>
-    <div class="checkbox-row">
-      <input type="checkbox" id="showTargetPace" checked>
-      <label for="showTargetPace">Target Pace</label>
-    </div>
-    <div class="checkbox-row">
-      <input type="checkbox" id="showDaysAhead" checked>
-      <label for="showDaysAhead">Days Ahead/Behind</label>
-    </div>
-    <div class="checkbox-row">
-      <input type="checkbox" id="showDaysInfo" checked>
-      <label for="showDaysInfo">Days Info (elapsed / left)</label>
-    </div>
-    <div class="checkbox-row">
-      <input type="checkbox" id="showStatus" checked>
-      <label for="showStatus">Status</label>
-    </div>
-  </div>
-  
-  <div class="help-text" style="margin-top: 8px;">
-    Toggle which items to display in the Credit Tracker card. Changes apply instantly.
-  </div>
-</div>
-
-    
-    <div class="help-text" style="margin-top: 8px;">
-      Toggle which items to display in the Credit Tracker card. Changes apply instantly.
-    </div>
-  </div>
-
-
-<!-- Numeric Display Settings Section -->
-<div class="numeric-settings-section">
-  <div class="section-title">Numeric Display Settings</div>
-  
-  <!-- Switch 1: Menu Expansion -->
-  <div class="toggle-row">
-    <span class="toggle-label">Numeric Display Settings</span>
-    <label class="toggle-switch">
-      <input type="checkbox" id="numericSettingsToggle">
-      <span class="slider"></span>
-    </label>
-  </div>
-  
-  <!-- Expansion Menu (Default: Hidden) -->
-  <div class="numeric-settings-menu" id="numericSettingsMenu">
-    
-    <!-- Switch 2: Display Mode Toggle -->
-    <div class="toggle-row">
-      <span class="toggle-label">Numeric Display Mode</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="numericDisplayToggle">
-        <span class="slider"></span>
-      </label>
-    </div>
-    
-    <!-- Monthly Price Input -->
-    <div class="input-row">
-      <label for="monthlyPrice">Monthly Price:</label>
-      <input type="number" id="monthlyPrice" class="wide-input" min="0" value="0" step="0.01">
-    </div>
-    
-    <!-- Decimal Places Selection -->
-    <div class="input-row">
-      <label for="decimalPlaces">Decimal Places:</label>
-      <select id="decimalPlaces" style="width: 80px; padding: 4px;">
-        <option value="0">0 (Integer)</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-      </select>
-    </div>
-    
-    <!-- Preview Display -->
-    <div class="preview-box" id="conversionPreview">
-      <strong>Preview:</strong><br>
-      Conversion Rate: <span id="previewRate">0.000000</span><br>
-      100 credits = <span id="previewValue">0.0</span>
-    </div>
-    
-    <!-- Help Text -->
-    <div class="help-text">
-      Enter your monthly plan price. The conversion rate will be automatically calculated as: (monthly price ÷ plan credits).
-      <br><br>
-      <strong>Examples:</strong><br>
-      • Plan: 10000 credits, Price: $19.99 → Rate: 0.001999<br>
-      • Plan: 10000 credits, Price: 2980円 → Rate: 0.298
-    </div>
-    
-  </div>
-</div>
-
-  <div class="debug-section">
-    <div class="toggle-row">
-      <span class="toggle-label">Debug Mode (Console Logs)</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="debugModeToggle">
-        <span class="slider"></span>
-      </label>
-    </div>
-    <div class="help-text">
-      Enable detailed console logs for troubleshooting. Reload page after changing.
-    </div>
-  </div>
-
-  <!-- Diagnostic Logs Section -->
-  <div class="diagnostic-section">
-    <button id="viewDiagnosticsBtn" class="action-button" style="background: #5f6368;">
-      View Diagnostic Logs
-    </button>
-    <div class="help-text">
-      View detailed detection logs, strategy statistics, and failure reports for troubleshooting.
-    </div>
-  </div>
-
+  <script src="scripts/content/init.js"></script>
+  <script src="scripts/content/modules/ui-common.js"></script>
+  <script src="scripts/content/modules/metrics-calculator.js"></script>
+  <script src="scripts/content/modules/metrics-calculator.js"></script>
   <script src="popup.js"></script>
 </body>
+
 </html>

@@ -1,50 +1,66 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <style>
-    body { 
-      width: 600px; 
-      font-family: 'Courier New', monospace; 
-      padding: 20px; 
+    body {
+      width: 600px;
+      font-family: 'Courier New', monospace;
+      padding: 20px;
       background: #1e1e1e;
       color: #d4d4d4;
     }
-    h3 { 
-      color: #4ec9b0; 
-      border-bottom: 2px solid #4ec9b0; 
+
+    h3 {
+      color: #4ec9b0;
+      border-bottom: 2px solid #4ec9b0;
       padding-bottom: 8px;
       margin-top: 0;
     }
-    .section { 
-      margin: 15px 0; 
-      padding: 12px; 
-      background: #252526; 
+
+    .section {
+      margin: 15px 0;
+      padding: 12px;
+      background: #252526;
       border-radius: 5px;
       border-left: 3px solid #007acc;
     }
-    .label { 
-      color: #9cdcfe; 
-      font-weight: bold; 
+
+    .label {
+      color: #9cdcfe;
+      font-weight: bold;
       margin-bottom: 6px;
     }
-    .value { 
-      color: #ce9178; 
+
+    .value {
+      color: #ce9178;
       margin-top: 5px;
     }
-    .success { color: #4ec9b0; }
-    .error { color: #f48771; }
-    .warning { color: #dcdcaa; }
-    pre { 
-      background: #1e1e1e; 
-      padding: 10px; 
-      border-radius: 3px; 
+
+    .success {
+      color: #4ec9b0;
+    }
+
+    .error {
+      color: #f48771;
+    }
+
+    .warning {
+      color: #dcdcaa;
+    }
+
+    pre {
+      background: #1e1e1e;
+      padding: 10px;
+      border-radius: 3px;
       overflow-x: auto;
       font-size: 11px;
       border: 1px solid #3e3e42;
       margin: 8px 0;
       line-height: 1.5;
     }
+
     button {
       background: #0e639c;
       color: white;
@@ -56,66 +72,79 @@
       font-size: 13px;
       font-family: sans-serif;
     }
-    button:hover { 
-      background: #1177bb; 
+
+    button:hover {
+      background: #1177bb;
     }
+
     button:active {
       background: #094771;
     }
+
     .button-container {
       text-align: center;
       margin-top: 20px;
       padding-top: 15px;
       border-top: 1px solid #3e3e42;
     }
+
     .info-text {
       font-size: 11px;
       color: #858585;
       margin-top: 5px;
     }
+
     .stat-grid {
       display: grid;
       grid-template-columns: 150px 1fr;
       gap: 5px;
       font-size: 12px;
     }
+
     .stat-label {
       color: #9cdcfe;
     }
+
     .stat-value {
       color: #ce9178;
       font-weight: bold;
     }
   </style>
 </head>
+
 <body>
   <h3>🔍 Credit Tracker for Genspark - Diagnostics</h3>
-  
+
   <div class="section">
     <div class="label">Last Success</div>
     <div id="lastSuccess" class="value">Loading...</div>
   </div>
-  
+
   <div class="section">
-    <div class="label">Strategy Statistics</div>
-    <div id="strategyStats" class="value">Loading...</div>
+    <div class="label">Stage Statistics</div>
+    <div id="stageStats" class="value">Loading...</div>
   </div>
-  
+
   <div class="section">
     <div class="label">Success History (Last 10)</div>
     <div id="successHistory" class="value">Loading...</div>
   </div>
-  
+
   <div class="section">
     <div class="label">Recent Failures</div>
     <div id="failureLogs" class="value">Loading...</div>
   </div>
-  
+
+  <div class="section">
+    <div class="label">Sidebar Stage Statistics</div>
+    <div id="sidebarStageStats" class="value">Loading...</div>
+  </div>
+
   <div class="section">
     <div class="label">Sidebar Display Failures</div>
     <div id="sidebarFailures" class="value">Loading...</div>
   </div>
-  
+
   <div class="button-container">
     <button id="exportBtn">📋 Export All Data</button>
     <button id="clearBtn">🗑️ Clear Diagnostic Logs</button>
@@ -123,7 +152,8 @@
       Export data to share with developers or clear old diagnostic logs.
     </div>
   </div>
-  
+
   <script src="diagnostic.js"></script>
 </body>
+
 </html>

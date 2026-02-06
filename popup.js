@@ -1,27 +1,26 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const UICommon = window.GensparkTracker.UI.Common;
+  const embeddedPreviewDiv = document.getElementById('embedded-tracker-preview');
   const logDiv = document.getElementById('log');
   const renewalDayInput = document.getElementById('renewalDay');
   const todayDisplay = document.getElementById('todayDate');
   const datePrefix = document.getElementById('datePrefix');
-  const fixedLimitToggle = document.getElementById('fixedLimitToggle');
-  const fixedLimitValue = document.getElementById('fixedLimitValue');
   const setDailyStartBtn = document.getElementById('setDailyStartBtn');
   const dailyStartInput = document.getElementById('dailyStartInput');
   const debugModeToggle = document.getElementById('debugModeToggle');
   const planStartCreditInput = document.getElementById('planStartCredit');
+  const purchasedCreditsInput = document.getElementById('purchasedCredits');
   const viewDiagnosticsBtn = document.getElementById('viewDiagnosticsBtn');
-  
+
   // Numeric Display Settings
-  const numericSettingsToggle = document.getElementById('numericSettingsToggle');
   const numericSettingsMenu = document.getElementById('numericSettingsMenu');
   const numericDisplayToggle = document.getElementById('numericDisplayToggle');
   const monthlyPriceInput = document.getElementById('monthlyPrice');
   const decimalPlacesSelect = document.getElementById('decimalPlaces');
   const previewRate = document.getElementById('previewRate');
   const previewValue = document.getElementById('previewValue');
-  
+
   // Display Settings
-  const displaySettingsToggle = document.getElementById('displaySettingsToggle');
   const displaySettingsMenu = document.getElementById('displaySettingsMenu');
   const displayCheckboxes = {
     showDailyStart: document.getElementById('showDailyStart'),
@@ -45,85 +44,163 @@ document.addEventListener('DOMContentLoaded', () => {
   const updateDatePrefix = (renewalDay) => {
     const now = new Date();
     todayDisplay.innerText = formatDate(now);
-    
+
     let displayDate = new Date(now.getFullYear(), now.getMonth(), renewalDay);
     if (now.getDate() >= renewalDay) {
       displayDate.setMonth(displayDate.getMonth() + 1);
     }
-    
+
     const y = displayDate.getFullYear();
     const m = String(displayDate.getMonth() + 1).padStart(2, '0');
     datePrefix.innerText = `${y}/${m}/`;
   };
 
-  const getPlanStartDate = (renewalDay) => {
-    const now = new Date();
-    let planStart = new Date(now.getFullYear(), now.getMonth(), renewalDay);
-    
-    if (now.getDate() < renewalDay) {
-      planStart.setMonth(planStart.getMonth() - 1);
-    }
-    
-    return planStart;
+
+
+  const renderEmbeddedPreview = () => {
+    chrome.storage.local.get({
+      history: [],
+      latest: null,
+      renewalDay: 1,
+      previousBalance: null,
+      planStartCredit: 10000,
+      showDailyStart: true,
+      showCurrentBalance: true,
+      showConsumedToday: true,
+      showSinceLastCheck: true,
+      showActualPace: true,
+      showTargetPace: true,
+      showDaysAhead: true,
+      showDaysInfo: true,
+      showStatus: true,
+      numericDisplayEnabled: false,
+      monthlyPrice: 0,
+      decimalPlaces: 0,
+      purchasedCredits: 0
+    }, (res) => {
+      if (!embeddedPreviewDiv) return;
+
+      const history = res.history;
+      const latest = res.latest;
+      const renewalDay = res.renewalDay;
+      const previousBalance = res.previousBalance;
+      const baseStartCredit = res.planStartCredit || 10000;
+      const totalStartCredit = baseStartCredit + (res.purchasedCredits || 0);
+      const numericDisplayEnabled = res.numericDisplayEnabled;
+      const monthlyPrice = parseFloat(res.monthlyPrice) || 0;
+      const decimalPlaces = (res.decimalPlaces !== undefined && res.decimalPlaces !== null)
+        ? parseInt(res.decimalPlaces, 10)
+        : 0;
+      const conversionRate = baseStartCredit > 0 ? monthlyPrice / baseStartCredit : 0;
+
+      if (!history || history.length === 0 || !latest) {
+        embeddedPreviewDiv.innerHTML = '<div style="color:#d8b4fe;">No data available yet.</div>';
+        return;
+      }
+
+      const today = new Date();
+      const todayStr = formatDate(today);
+      const todayLogs = history.filter(item => formatDate(new Date(item.time)) === todayStr);
+
+      const firstCountToday = todayLogs.length > 0 ? todayLogs[0].count : latest.count;
+      const currentCount = latest.count;
+      const consumed = firstCountToday - currentCount;
+
+      let sinceLastCheck = 0;
+      if (previousBalance !== null && previousBalance >= currentCount) {
+        sinceLastCheck = previousBalance - currentCount;
+      }
+
+      const MC = window.GensparkTracker.Modules.MetricsCalculator;
+
+      const now = new Date();
+      const planStart = MC.getPlanStartDate(renewalDay);
+      const daysElapsed = MC.getDaysElapsed(planStart);
+
+      const consumedTotal = totalStartCredit - currentCount;
+      const actualPace = MC.calculateActualPace(totalStartCredit, currentCount, daysElapsed);
+
+      const daysLeft = MC.getDaysLeft(renewalDay);
+      const targetPace = MC.calculateTargetPace(totalStartCredit, renewalDay);
+
+      const statusData = MC.getPaceStatus(actualPace, targetPace);
+      const statusText = statusData.status.replace(/🟢|🟡|🔴/g, '').trim().replace('\n', '<br>'); // Remove emojis for embedded view if preferred, or keep them. The original had HTML line breaks.
+      const statusColor = statusData.color;
+
+      const dailyStartHTML = res.showDailyStart ? `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #c4b5fd;">
+          <span>Daily Start:</span>
+          <span style="font-weight: bold;">${UICommon.formatValue(firstCountToday, numericDisplayEnabled, conversionRate, decimalPlaces)}</span>
+        </div>` : '';
+
+      const currentBalanceHTML = res.showCurrentBalance ? `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #c4b5fd;">
+          <span>Current Credit:</span>
+          <span style="font-weight: bold;">${UICommon.formatValue(currentCount, numericDisplayEnabled, conversionRate, decimalPlaces)}</span>
+        </div>` : '';
+
+      const consumedTodayHTML = res.showConsumedToday ? `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #fca5a5;">
+          <span>Consumed Today:</span>
+          <span style="font-weight: bold;">-${UICommon.formatValue(consumed, numericDisplayEnabled, conversionRate, decimalPlaces)}</span>
+        </div>` : '';
+
+      const sinceLastCheckHTML = res.showSinceLastCheck ? `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #fdba74;">
+          <span>Since Last Check:</span>
+          <span style="font-weight: bold;">-${UICommon.formatValue(sinceLastCheck, numericDisplayEnabled, conversionRate, decimalPlaces)}</span>
+        </div>` : '';
+
+      const actualPaceHTML = res.showActualPace ? `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #67e8f9;">
+          <span>Actual Pace:</span>
+          <span style="font-weight: bold;">${UICommon.formatValue(actualPace, numericDisplayEnabled, conversionRate, decimalPlaces)} /day</span>
+        </div>` : '';
+
+      const targetPaceHTML = res.showTargetPace ? `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 2px; color: #a5b4fc;">
+          <span>Target Pace:</span>
+          <span style="font-weight: bold;">${UICommon.formatValue(targetPace, numericDisplayEnabled, conversionRate, decimalPlaces)} /day</span>
+        </div>` : '';
+
+      let daysAheadHTML = '';
+      if (res.showDaysAhead) {
+        if (targetPace === 0) {
+          daysAheadHTML = `<div style="display: flex; justify-content: space-between; margin-bottom: 2px; color: #6b7280;"><span>Days Ahead/Behind:</span><span style="font-weight: bold;">N/A</span></div>`;
+        } else {
+          const idealBalanceToday = totalStartCredit - (targetPace * daysElapsed);
+          const creditDifference = currentCount - idealBalanceToday;
+          const daysDifference = creditDifference / targetPace;
+          const formattedDays = Math.abs(daysDifference).toFixed(decimalPlaces);
+          const displayText = daysDifference >= 0 ? `+${formattedDays} day` : `-${formattedDays} day`;
+          const displayColor = daysDifference >= 0 ? '#007bff' : '#dc3545';
+          daysAheadHTML = `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 2px; color: ${displayColor};">
+              <span>Days Ahead/Behind:</span>
+              <span style="font-weight: bold;">${displayText}</span>
+            </div>`;
+        }
+      }
+
+      const daysInfoHTML = res.showDaysInfo ? `<div style="font-size: 10px; color: #c4b5fd; text-align: right; margin-top: 2px;">(${daysElapsed} days elapsed / ${daysLeft} days left)</div>` : '';
+      const statusHTML = res.showStatus ? `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 8px; color: ${statusColor}; font-weight: bold;">
+          <span style="white-space: nowrap; margin-right: 8px;">Status:</span>
+          <span style="text-align: right; line-height: 1.3;">${statusText}</span>
+        </div>` : '';
+
+      const bottomSectionHTML = actualPaceHTML + targetPaceHTML + daysAheadHTML + daysInfoHTML + statusHTML;
+      const showTopSection = res.showDailyStart || res.showCurrentBalance || res.showConsumedToday || res.showSinceLastCheck;
+      const dividerHTML = (showTopSection && bottomSectionHTML.trim().length > 0) ? '<div style="border-top: 1px solid #7c3aed; margin: 10px 0;"></div>' : '';
+
+      embeddedPreviewDiv.innerHTML = `${dailyStartHTML}${currentBalanceHTML}${consumedTodayHTML}${sinceLastCheckHTML}${dividerHTML}${bottomSectionHTML}`;
+    });
   };
 
-  const getDaysElapsed = (planStartDate) => {
-    const now = new Date();
-    const diffTime = now - planStartDate;
-    const daysElapsed = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(1, daysElapsed);
-  };
-
-  const calculateActualPace = (planStartCredit, currentCredit, daysElapsed) => {
-    const consumed = planStartCredit - currentCredit;
-    const actualPace = consumed / daysElapsed;
-    return Math.round(actualPace * 10) / 10;
-  };
-
-  const calculateTargetPace = (planStartCredit, renewalDay) => {
-    const now = new Date();
-    const nextRenewal = new Date(now.getFullYear(), now.getMonth(), renewalDay);
-    if (now.getDate() >= renewalDay) {
-      nextRenewal.setMonth(nextRenewal.getMonth() + 1);
-    }
-    
-    const planStart = getPlanStartDate(renewalDay);
-    const totalDays = Math.ceil((nextRenewal - planStart) / (1000 * 60 * 60 * 24));
-    const targetPace = planStartCredit / totalDays;
-    
-    return Math.round(targetPace * 10) / 10;
-  };
-
-  const getPaceStatus = (actualPace, targetPace) => {
-    const diff = actualPace - targetPace;
-    const percentDiff = (diff / targetPace) * 100;
-    
-    let status = '';
-    let color = '';
-    
-    if (percentDiff < -10) {
-      status = `🟢 Excellent (Saving ${Math.abs(Math.round(percentDiff))}%)`;
-      color = '#34a853';
-    } else if (percentDiff < 10) {
-      status = '🟢 On Track';
-      color = '#34a853';
-    } else if (percentDiff < 30) {
-      status = `🟡 Slightly Over (+${Math.round(percentDiff)}%)`;
-      color = '#fbbc04';
-    } else {
-      status = `🔴 Over Target (+${Math.round(percentDiff)}%)`;
-      color = '#ea4335';
-    }
-    
-    return { status, color };
-  };
-
-  chrome.storage.local.get({ 
-    history: [], 
-    latest: null, 
+  chrome.storage.local.get({
+    history: [],
+    latest: null,
     renewalDay: 1,
-    fixedLimitEnabled: false,
-    fixedLimitValue: 100,
     debugMode: false,
     planStartCredit: 10000,
     showDailyStart: true,
@@ -137,232 +214,203 @@ document.addEventListener('DOMContentLoaded', () => {
     showStatus: true,
     numericDisplayEnabled: false,
     monthlyPrice: 0,
-    decimalPlaces: 0
+    decimalPlaces: 0,
+    purchasedCredits: 0
   }, (data) => {
     if (chrome.runtime.lastError) {
       console.error('[Credit Tracker for Genspark] Failed to load settings:', chrome.runtime.lastError);
       logDiv.innerHTML = '<div style="padding:10px; color:#d93025; font-size:12px;">Failed to load data. Please reload the extension.</div>';
       return;
     }
-    
+
     renewalDayInput.value = data.renewalDay;
-    fixedLimitToggle.checked = data.fixedLimitEnabled;
-    fixedLimitValue.value = data.fixedLimitValue;
     debugModeToggle.checked = data.debugMode;
+
+    // Initialize diagnostic button visibility
+    const diagnosticSection = document.querySelector('.diagnostic-section');
+    if (diagnosticSection) {
+      diagnosticSection.style.display = data.debugMode ? 'block' : 'none';
+    }
+
     planStartCreditInput.value = data.planStartCredit;
-    
-    // Display Settings チェックボックスの状態を復元
+    purchasedCreditsInput.value = data.purchasedCredits;
+
+    // Restore Display Settings checkbox state
     Object.keys(displayCheckboxes).forEach(key => {
       displayCheckboxes[key].checked = data[key];
     });
-    
-    // Numeric Display Settings の状態を復元
+
+    // Restore Numeric Display Settings state
     numericDisplayToggle.checked = data.numericDisplayEnabled;
     monthlyPriceInput.value = data.monthlyPrice;
     decimalPlacesSelect.value = data.decimalPlaces;
 
-// Fixed Daily Limit Mode による Display Settings の制御
-const updateDisplaySettingsState = () => {
-  const isFixedMode = fixedLimitToggle.checked;
-  
-  // Fixed Mode の場合、特定の項目を無効化
-  const itemsToDisable = ['showActualPace', 'showTargetPace', 'showDaysAhead', 'showDaysInfo', 'showStatus'];
-  
-  itemsToDisable.forEach(key => {
-    const checkbox = displayCheckboxes[key];
-    if (isFixedMode) {
-      checkbox.disabled = true;
-      checkbox.parentElement.style.opacity = '0.5';
-      checkbox.parentElement.style.cursor = 'not-allowed';
-    } else {
-      checkbox.disabled = false;
-      checkbox.parentElement.style.opacity = '1';
-      checkbox.parentElement.style.cursor = 'pointer';
-    }
-  });
-};
 
-// 初期状態を設定
-updateDisplaySettingsState();
 
-// Fixed Daily Limit Toggle の変更を監視
-fixedLimitToggle.addEventListener('change', () => {
-  updateDisplaySettingsState();
-  saveSettings(); // 既存の保存処理を呼び出し
-});
-
-    
 
 
     updateDatePrefix(data.renewalDay);
 
     const saveSettings = () => {
       const renewalDay = parseInt(renewalDayInput.value) || 1;
-      const fixedLimitEnabled = fixedLimitToggle.checked;
-      const fixedLimit = parseInt(fixedLimitValue.value) || 100;
       const planStartCredit = parseInt(planStartCreditInput.value) || 10000;
-      
-      chrome.storage.local.set({ 
+      const purchasedCredits = parseInt(purchasedCreditsInput.value) || 0;
+
+      chrome.storage.local.set({
         renewalDay,
-        fixedLimitEnabled,
-        fixedLimitValue: fixedLimit,
-        planStartCredit
+        planStartCredit,
+        purchasedCredits
       }, () => {
         if (chrome.runtime.lastError) {
           console.error('[Credit Tracker for Genspark] Failed to save settings:', chrome.runtime.lastError);
           alert('Failed to save settings. Storage may be full.');
           return;
         }
-        
+
         updateDatePrefix(renewalDay);
         renderUI();
+        renderEmbeddedPreview(); // Ensure preview matches new total
       });
     };
 
-// Display Settings の初期状態とトグルスイッチ処理
-displaySettingsMenu.style.display = 'none'; // 初期状態: 閉じている
+    // Monitor Display Settings checkbox changes
 
-displaySettingsToggle.addEventListener('change', () => {
-  displaySettingsMenu.style.display = displaySettingsToggle.checked ? 'block' : 'none';
-});
-
-// Display Settings チェックボックスの変更を監視
-Object.keys(displayCheckboxes).forEach(key => {
-  displayCheckboxes[key].addEventListener('change', () => {
-    const settings = {};
-    Object.keys(displayCheckboxes).forEach(k => {
-      settings[k] = displayCheckboxes[k].checked;
-    });
-    
-    chrome.storage.local.set(settings, () => {
-      if (chrome.runtime.lastError) {
-        console.error('[Credit Tracker for Genspark] Failed to save display settings:', chrome.runtime.lastError);
-        return;
+    // ========================================
+    // Display Presets
+    // ========================================
+    const presets = {
+      all: {
+        showDailyStart: true,
+        showCurrentBalance: true,
+        showConsumedToday: true,
+        showSinceLastCheck: true,
+        showActualPace: true,
+        showTargetPace: true,
+        showDaysAhead: true,
+        showDaysInfo: true,
+        showStatus: true
+      },
+      pace: {
+        showDailyStart: true,
+        showCurrentBalance: false,
+        showConsumedToday: true,
+        showSinceLastCheck: true,
+        showActualPace: true,
+        showTargetPace: true,
+        showDaysAhead: false,
+        showDaysInfo: false,
+        showStatus: true
+      },
+      day: {
+        showDailyStart: true,
+        showCurrentBalance: false,
+        showConsumedToday: true,
+        showSinceLastCheck: true,
+        showActualPace: false,
+        showTargetPace: false,
+        showDaysAhead: true,
+        showDaysInfo: true,
+        showStatus: false
       }
-      
-      // content.jsに更新通知を送信
-      chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-        if (tabs[0]) {
-          chrome.tabs.sendMessage(tabs[0].id, {action: 'updateDisplay'}, (response) => {
-            // エラーは無視（ページがGensparkでない場合など）
-          });
+    };
+
+    const applyPreset = (presetKey) => {
+      const config = presets[presetKey];
+      if (!config) return;
+
+      chrome.storage.local.set(config, () => {
+        if (chrome.runtime.lastError) {
+          console.error('[Credit Tracker for Genspark] Failed to apply preset:', chrome.runtime.lastError);
+          return;
         }
+
+        // Update checkboxes in UI
+        Object.keys(displayCheckboxes).forEach(key => {
+          if (config[key] !== undefined) {
+            displayCheckboxes[key].checked = config[key];
+          }
+        });
+
+        // Update active button state
+        document.querySelectorAll('.preset-button').forEach(btn => btn.classList.remove('active'));
+        const activeBtn = document.getElementById(`preset${presetKey.charAt(0).toUpperCase() + presetKey.slice(1)}`);
+        if (activeBtn) activeBtn.classList.add('active');
+
+
+        // Update preview
+        renderEmbeddedPreview();
+      });
+    };
+
+    document.getElementById('presetAll').addEventListener('click', () => applyPreset('all'));
+    document.getElementById('presetPace').addEventListener('click', () => applyPreset('pace'));
+    document.getElementById('presetDay').addEventListener('click', () => applyPreset('day'));
+
+    // Monitor Display Settings checkbox changes
+    Object.keys(displayCheckboxes).forEach(key => {
+      displayCheckboxes[key].addEventListener('change', () => {
+        // ... (existing change logic)
+        // Remove active class from buttons when manual change occurs
+        document.querySelectorAll('.preset-button').forEach(btn => btn.classList.remove('active'));
+
+        const settings = {};
+        Object.keys(displayCheckboxes).forEach(k => {
+          settings[k] = displayCheckboxes[k].checked;
+        });
+
+        chrome.storage.local.set(settings, () => {
+          if (chrome.runtime.lastError) {
+            console.error('[Credit Tracker for Genspark] Failed to save display settings:', chrome.runtime.lastError);
+            return;
+          }
+
+
+          // Update preview
+          renderEmbeddedPreview();
+        });
       });
     });
-  });
-});
 
 
-// ========================================
-// Numeric Display Settings
-// ========================================
+    // ========================================
+    // Numeric Display Settings
+    // ========================================
 
-// プレビューを更新する関数
-function updateNumericPreview() {
-  chrome.storage.local.get({
-    planStartCredit: 10000,
-    monthlyPrice: 0,
-    decimalPlaces: 0
-  }, (data) => {
-    const { planStartCredit, monthlyPrice, decimalPlaces } = data;
-    const conversionRate = planStartCredit > 0 ? monthlyPrice / planStartCredit : 0;
-    const exampleValue = 100 * conversionRate;
-    
-    // 確実に数値に変換（0の場合も正しく処理）
-    const decimalPlacesNum = (decimalPlaces !== undefined && decimalPlaces !== null) 
-      ? parseInt(decimalPlaces, 10) 
-      : 0;
-    
-    previewRate.textContent = conversionRate.toFixed(6);
-    previewValue.textContent = exampleValue.toFixed(decimalPlacesNum);
-  });
-}
+    // Function to update preview
+    function updateNumericPreview() {
+      chrome.storage.local.get({
+        planStartCredit: 10000,
+        monthlyPrice: 0,
+        decimalPlaces: 0
+      }, (data) => {
+        const { planStartCredit, monthlyPrice, decimalPlaces } = data;
+        const conversionRate = planStartCredit > 0 ? monthlyPrice / planStartCredit : 0;
+        const exampleValue = 100 * conversionRate;
 
-// 初期状態: メニューを閉じる
-numericSettingsMenu.style.display = 'none';
+        // Ensure conversion to number (handle 0 correctly)
+        const decimalPlacesNum = (decimalPlaces !== undefined && decimalPlaces !== null)
+          ? parseInt(decimalPlaces, 10)
+          : 0;
 
-// 外側トグル: メニューの展開/折りたたみ
-numericSettingsToggle.addEventListener('change', () => {
-  numericSettingsMenu.style.display = numericSettingsToggle.checked ? 'block' : 'none';
-});
-
-// 内側トグル: 表示モードの切り替え
-numericDisplayToggle.addEventListener('change', () => {
-  const numericDisplayEnabled = numericDisplayToggle.checked;
-  chrome.storage.local.set({ numericDisplayEnabled }, () => {
-    if (chrome.runtime.lastError) {
-      console.error('[Credit Tracker for Genspark] Failed to save numeric display mode:', chrome.runtime.lastError);
-      return;
+        previewRate.textContent = conversionRate.toFixed(6);
+        previewValue.textContent = exampleValue.toFixed(decimalPlacesNum);
+      });
     }
-    
-    // content.jsに更新通知を送信
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-      if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, {action: 'updateDisplay'}, (response) => {
-          // エラーは無視
-        });
+
+    // Numeric Display Settings logic consolidated below...
+
+
+    const updateDiagnosticVisibility = (isEnabled) => {
+      const diagnosticSection = document.querySelector('.diagnostic-section');
+      if (diagnosticSection) {
+        diagnosticSection.style.display = isEnabled ? 'block' : 'none';
       }
-    });
-  });
-});
-
-// 月額料金の変更
-monthlyPriceInput.addEventListener('input', () => {
-  const monthlyPrice = parseFloat(monthlyPriceInput.value) || 0;
-  chrome.storage.local.set({ monthlyPrice }, () => {
-    if (chrome.runtime.lastError) {
-      console.error('[Credit Tracker for Genspark] Failed to save monthly price:', chrome.runtime.lastError);
-      return;
-    }
-    updateNumericPreview();
-  });
-});
-
-// 小数点桁数の変更（統合版）
-decimalPlacesSelect.addEventListener('change', () => {
-  // 1. 値を取得（明示的な処理）
-  const value = decimalPlacesSelect.value;
-  const decimalPlaces = (value !== undefined && value !== null && value !== '') 
-    ? parseInt(value, 10) 
-    : 0;
-  
-  // 2. バリデーション
-  if (isNaN(decimalPlaces) || decimalPlaces < 0 || decimalPlaces > 4) {
-    console.error('[Credit Tracker for Genspark] Invalid decimalPlaces:', value);
-    return;
-  }
-  
-  // 3. 保存
-  chrome.storage.local.set({ decimalPlaces }, () => {
-    if (chrome.runtime.lastError) {
-      console.error('[Credit Tracker for Genspark] Failed to save decimal places:', chrome.runtime.lastError);
-      return;
-    }
-    
-    console.log('[Credit Tracker for Genspark] Saved decimalPlaces:', decimalPlaces);
-    
-    // 4. プレビュー更新
-    updateNumericPreview();
-    
-    // 5. content.js に通知
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-      if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, {action: 'updateDisplay'}, (response) => {
-          // Genspark以外のページではエラーを無視
-        });
-      }
-    });
-  });
-});
-
-// planStartCreditの変更を監視してプレビューを更新
-planStartCreditInput.addEventListener('input', () => {
-  updateNumericPreview();
-});
-
+    };
 
     debugModeToggle.addEventListener('change', () => {
       const debugMode = debugModeToggle.checked;
+      updateDiagnosticVisibility(debugMode);
+
       chrome.storage.local.set({ debugMode }, () => {
         if (chrome.runtime.lastError) {
           console.error('[Credit Tracker for Genspark] Failed to save debug mode:', chrome.runtime.lastError);
@@ -375,40 +423,33 @@ planStartCreditInput.addEventListener('input', () => {
       });
     });
 
-    // View Diagnostics ボタン
+    // View Diagnostics button
     viewDiagnosticsBtn.addEventListener('click', () => {
       chrome.tabs.create({
         url: chrome.runtime.getURL('diagnostic.html')
       });
     });
 
-    // Numeric Display Settings - Menu Toggle
-    numericSettingsToggle.addEventListener('change', () => {
-      if (numericSettingsToggle.checked) {
-        numericSettingsMenu.style.display = 'block';
-      } else {
-        numericSettingsMenu.style.display = 'none';
-      }
-    });
+    // Numeric Display Settings logic consolidated below...
 
     // Numeric Display Settings - Calculate and Update Preview
     function updateNumericPreview() {
       const monthlyPrice = parseFloat(monthlyPriceInput.value) || 0;
-      const planStartCredit = parseInt(planStartCreditInput.value) || 10000;
-      
-      // decimalPlaces の取得（明示的処理）
+      const baseCredit = parseInt(planStartCreditInput.value) || 10000;
+
+      // Get decimalPlaces (explicit handling)
       const value = decimalPlacesSelect.value;
-      const decimalPlaces = (value !== undefined && value !== null && value !== '') 
-        ? parseInt(value, 10) 
+      const decimalPlaces = (value !== undefined && value !== null && value !== '')
+        ? parseInt(value, 10)
         : 0;
-      
+
       let conversionRate = 0;
-      if (planStartCredit > 0) {
-        conversionRate = monthlyPrice / planStartCredit;
+      if (baseCredit > 0) {
+        conversionRate = monthlyPrice / baseCredit;
       }
-      
+
       const previewAmount = (100 * conversionRate).toFixed(decimalPlaces);
-      
+
       previewRate.textContent = conversionRate.toFixed(6);
       previewValue.textContent = previewAmount;
     }
@@ -424,16 +465,13 @@ planStartCreditInput.addEventListener('input', () => {
           return;
         }
         console.log('[Credit Tracker for Genspark] Saved numericDisplayEnabled:', numericDisplayEnabled);
-        
-        // content.js に通知
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          if (tabs[0]) {
-            chrome.tabs.sendMessage(tabs[0].id, { action: 'updateDisplay' });
-          }
-        });
+
+
+        // Update preview
+        renderEmbeddedPreview();
       });
     });
-    
+
     monthlyPriceInput.addEventListener('input', () => {
       const monthlyPrice = parseFloat(monthlyPriceInput.value) || 0;
       chrome.storage.local.set({ monthlyPrice }, () => {
@@ -442,22 +480,47 @@ planStartCreditInput.addEventListener('input', () => {
           return;
         }
         console.log('[Credit Tracker for Genspark] Saved monthlyPrice:', monthlyPrice);
-        
-        // プレビュー更新
+
+        // Update preview
         updateNumericPreview();
-        
-        // content.js に通知
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          if (tabs[0]) {
-            chrome.tabs.sendMessage(tabs[0].id, { action: 'updateDisplay' });
-          }
-        });
+
+
+        // Update preview
+        renderEmbeddedPreview();
       });
     });
-    
-    // decimalPlacesSelect のイベントリスナーは既に上で定義済み（統合版）
-    
-    planStartCreditInput.addEventListener('change', updateNumericPreview);
+
+    // Change decimal places
+    decimalPlacesSelect.addEventListener('change', () => {
+      const value = decimalPlacesSelect.value;
+      const decimalPlaces = (value !== undefined && value !== null && value !== '')
+        ? parseInt(value, 10)
+        : 0;
+
+      if (isNaN(decimalPlaces) || decimalPlaces < 0 || decimalPlaces > 4) return;
+
+      chrome.storage.local.set({ decimalPlaces }, () => {
+        if (chrome.runtime.lastError) return;
+        updateNumericPreview();
+        renderEmbeddedPreview();
+
+      });
+    });
+
+    planStartCreditInput.addEventListener('change', () => {
+      updateNumericPreview();
+      renderEmbeddedPreview();
+      saveSettings(); // Ensure core settings are also saved
+    });
+
+    purchasedCreditsInput.addEventListener('input', () => {
+      updateNumericPreview();
+      renderEmbeddedPreview();
+    });
+
+    purchasedCreditsInput.addEventListener('change', () => {
+      saveSettings();
+    });
 
     // Initialize Numeric Display Settings
     chrome.storage.local.get({
@@ -467,36 +530,34 @@ planStartCreditInput.addEventListener('input', () => {
     }, (data) => {
       numericDisplayToggle.checked = data.numericDisplayEnabled;
       monthlyPriceInput.value = data.monthlyPrice;
-      decimalPlacesSelect.value = (data.decimalPlaces !== undefined && data.decimalPlaces !== null) 
-        ? data.decimalPlaces 
+      decimalPlacesSelect.value = (data.decimalPlaces !== undefined && data.decimalPlaces !== null)
+        ? data.decimalPlaces
         : 0;
       updateNumericPreview();
     });
 
     const renderUI = () => {
-      chrome.storage.local.get({ 
-        history: [], 
-        latest: null, 
+      chrome.storage.local.get({
+        history: [],
+        latest: null,
         renewalDay: 1,
-        fixedLimitEnabled: false,
-        fixedLimitValue: 100,
         planStartCredit: 10000,
         numericDisplayEnabled: false,
         monthlyPrice: 0,
-        decimalPlaces: 0
+        decimalPlaces: 0,
+        purchasedCredits: 0
       }, (res) => {
         if (chrome.runtime.lastError) {
           console.error('[Credit Tracker for Genspark] Failed to render UI:', chrome.runtime.lastError);
           logDiv.innerHTML = '<div style="padding:10px; color:#d93025; font-size:12px;">Failed to load data.</div>';
           return;
         }
-        
+
         const history = res.history;
         const latest = res.latest;
         const renewalDay = res.renewalDay;
-        const fixedLimitEnabled = res.fixedLimitEnabled;
-        const fixedLimit = res.fixedLimitValue;
-        const planStartCredit = res.planStartCredit;
+        const baseStartCredit = res.planStartCredit || 10000;
+        const totalStartCredit = baseStartCredit + (res.purchasedCredits || 0);
 
         if (!history || history.length === 0) {
           logDiv.innerHTML = '<div style="padding:10px; color:#999; font-size:12px;">No history recorded yet.</div>';
@@ -510,18 +571,53 @@ planStartCreditInput.addEventListener('input', () => {
           const logDate = new Date(item.time);
           return formatDate(logDate) === todayStr;
         });
-        
+
         let html = '';
-        if (todayLogs.length > 0 && latest) {
-          const firstCountToday = todayLogs[0].count;
+        if (latest) {
+          const firstCountToday = todayLogs.length > 0 ? todayLogs[0].count : latest.count;
           const currentCount = latest.count;
           const consumed = firstCountToday - currentCount;
 
-          const planStartDate = getPlanStartDate(renewalDay);
-          const daysElapsed = getDaysElapsed(planStartDate);
-          const actualPace = calculateActualPace(planStartCredit, currentCount, daysElapsed);
-          const targetPace = calculateTargetPace(planStartCredit, renewalDay);
-          const paceStatus = getPaceStatus(actualPace, targetPace);
+          const MC = window.GensparkTracker.Modules.MetricsCalculator;
+
+          const planStartDate = MC.getPlanStartDate(renewalDay);
+          const daysElapsed = MC.getDaysElapsed(planStartDate);
+          const actualPace = MC.calculateActualPace(totalStartCredit, currentCount, daysElapsed);
+          const targetPace = MC.calculateTargetPace(totalStartCredit, renewalDay);
+          const paceStatus = MC.getPaceStatus(actualPace, targetPace);
+
+          // Calculate Days Ahead/Behind and Days Left
+          const daysLeft = MC.getDaysLeft(renewalDay);
+
+          let daysAheadHTML = '';
+          if (targetPace > 0) {
+            const idealBalanceToday = totalStartCredit - (targetPace * daysElapsed);
+            const daysDifference = (currentCount - idealBalanceToday) / targetPace;
+            const formattedDays = Math.abs(daysDifference).toFixed(res.decimalPlaces || 0);
+            const displayText = daysDifference >= 0 ? `+${formattedDays} day` : `-${formattedDays} day`;
+            const displayColor = daysDifference >= 0 ? '#1a73e8' : '#d93025';
+            daysAheadHTML = `
+              <div class="status-row" style="color:${displayColor}; align-items: flex-start; margin-bottom: 8px;">
+                <span class="status-label">Days Ahead/Behind:</span>
+                <div style="text-align: right;">
+                  <span class="status-value">${displayText}</span>
+                  <div style="font-size: 10px; color: #999; margin-top: 2px;">
+                    (${daysElapsed} days elapsed / ${daysLeft} days left)
+                  </div>
+                </div>
+              </div>`;
+          } else {
+            daysAheadHTML = `
+              <div class="status-row" style="color:#5f6368; align-items: flex-start; margin-bottom: 8px;">
+                <span class="status-label">Days Ahead/Behind:</span>
+                <div style="text-align: right;">
+                  <span class="status-value">N/A</span>
+                  <div style="font-size: 10px; color: #999; margin-top: 2px;">
+                    (${daysElapsed} days elapsed / ${daysLeft} days left)
+                  </div>
+                </div>
+              </div>`;
+          }
 
           html = `
     <div class="status-row">
@@ -529,7 +625,7 @@ planStartCreditInput.addEventListener('input', () => {
       <span class="status-value">${firstCountToday}</span>
     </div>
     <div class="status-row">
-      <span class="status-label">Current Balance:</span>
+      <span class="status-label">Current Credit:</span>
       <span class="status-value">${currentCount}</span>
     </div>
     <div class="status-row" style="color:#d93025;">
@@ -545,22 +641,23 @@ planStartCreditInput.addEventListener('input', () => {
       <span class="status-label">Target Pace:</span>
       <span class="status-value">${targetPace} /day</span>
     </div>
-    <div class="status-row" style="color:${paceStatus.color}; font-weight:bold; margin-top:8px;">
+    ${daysAheadHTML}
+    <div class="status-row" style="color:${paceStatus.color}; font-weight:bold; margin-top:4px;">
       <span class="status-label">Status:</span>
       <span class="status-value">${paceStatus.status}</span>
-    </div>
-    <div style="font-size:10px; color:#999; text-align:right; margin-top:4px;">
-      (${daysElapsed} days elapsed since ${formatDate(planStartDate)})
     </div>
 `;
           setDailyStartBtn.disabled = false;
         } else {
           setDailyStartBtn.disabled = true;
+          html = '<div style="padding:10px; color:#999; font-size:12px;">No current data available.</div>';
         }
         logDiv.innerHTML = html;
-        
-        // Numeric Display プレビューを更新
+
+        // Update Numeric Display preview
         updateNumericPreview();
+        // Update Embedded preview
+        renderEmbeddedPreview();
       });
     };
 
@@ -568,37 +665,37 @@ planStartCreditInput.addEventListener('input', () => {
       setDailyStartBtn.disabled = true;
       const originalText = setDailyStartBtn.textContent;
       setDailyStartBtn.textContent = 'Setting...';
-      
+
       chrome.storage.local.get({ history: [], latest: null }, (data) => {
         const resetButton = () => {
           setDailyStartBtn.disabled = false;
           setDailyStartBtn.textContent = originalText;
           setDailyStartBtn.style.background = '#4285f4';
         };
-        
+
         if (chrome.runtime.lastError) {
           alert('Failed to load data: ' + chrome.runtime.lastError.message);
           resetButton();
           return;
         }
 
-        // 入力フォームの値を取得
+        // Get input form value
         const inputValue = dailyStartInput.value.trim();
         let dailyStartValue;
-        
+
         if (inputValue === '') {
-          // 入力が空の場合: 現在の残高を使用
+          // If input is empty: use current balance
           if (!data.latest || data.latest.count === undefined) {
-            alert('No current balance data available. Please enter a value manually.');
+            alert('No current credit data available. Please enter a value manually.');
             resetButton();
             return;
           }
           dailyStartValue = data.latest.count;
         } else {
-          // 入力がある場合: 入力値を使用
+          // If input exists: use input value
           dailyStartValue = parseInt(inputValue, 10);
-          
-          // バリデーション
+
+          // Validation
           if (isNaN(dailyStartValue) || dailyStartValue < 0 || dailyStartValue > 1000000) {
             alert('Please enter a valid value between 0 and 1,000,000.');
             resetButton();
@@ -631,15 +728,15 @@ planStartCreditInput.addEventListener('input', () => {
           }
 
           console.log(`[Credit Tracker for Genspark] Daily Start set to ${currentCount}`);
-          
+
           setDailyStartBtn.textContent = '✓ Done!';
           setDailyStartBtn.style.background = '#34a853';
-          
-          // 入力フォームをクリア
+
+          // Clear input form
           dailyStartInput.value = '';
-          
+
           renderUI();
-          
+
           setTimeout(() => {
             resetButton();
           }, 1500);
@@ -649,8 +746,7 @@ planStartCreditInput.addEventListener('input', () => {
 
     renderUI();
     renewalDayInput.addEventListener('change', saveSettings);
-    fixedLimitToggle.addEventListener('change', saveSettings);
-    fixedLimitValue.addEventListener('change', saveSettings);
     planStartCreditInput.addEventListener('change', saveSettings);
+    purchasedCreditsInput.addEventListener('change', saveSettings);
   });
 });
