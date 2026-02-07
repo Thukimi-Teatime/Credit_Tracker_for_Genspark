@@ -10,14 +10,18 @@ A browser extension to manage and visualize your Genspark.ai credit usage.
 - **Currency Conversion**: Translates credit values into real-world currency (USD, JPY, etc.) based on settings.
 - **Integrated UI**: Seamlessly displays information via a sidebar or embedded widgets without disrupting your workflow.
 
-### 2. How to Use
-1. **Initial Setup**:
-   - Open the extension popup, enter your "Plan Start Credits" (e.g., 10,000) and "Renewal Day" (e.g., Day 1), and save.
-2. **Recording Data**:
-   - Visit Genspark.ai and click on or view the area where your credits are displayed (sidebar or user menu).
-   - The extension will detect the value and record it as your latest balance.
-3. **Monitoring Status**:
-   - Check the sidebar or popup to view metrics like your current pace and "Days Ahead/Behind."
+> [!IMPORTANT]
+> ### 2. How to Use
+> This extension updates your credit data whenever you open your profile menu to display your credits. Since tracking is not fully automatic, please check your profile regularly to keep your data current.
+>
+> 1. **Recording Data**:
+>    - Visit Genspark.ai and open the profile menu where your credits are displayed.
+>    - The extension will automatically detect the value and record it as your latest credit.
+> 2. **Customizing for Your Plan**:
+>    - In the same profile menu, click the **Settings** button (provided by the extension) to configure your plan.
+>    - Enter your "Plan Start Credits" (e.g., 10,000) and "Renewal Day" (e.g., Day 1), and save.
+> 3. **Monitoring Status**:
+>    - Check the sidebar or popup to view metrics like your current pace and "Days Ahead/Behind."
 
 ### 3. Settings & Parameters
 The values you enter in the settings are used as follows:
