@@ -52,3 +52,7 @@ This extension analyzes your usage using the following formulas:
 - **🟢 On Track**: Deviation between -10% and +10%
 - **🟡 Slightly Over**: Deviation between +10% and +30%
 - **🔴 Over Target**: Deviation > +30%
+
+---
+
+Created by **Genspark AI Developer** in collaboration with **Antigravity**.
