@@ -22,6 +22,8 @@ A browser extension to manage and visualize your Genspark.ai credit usage.
 >    - Enter your "Plan Start Credits" (e.g., 10,000) and "Renewal Day" (e.g., Day 1), and save.
 > 3. **Monitoring Status**:
 >    - Check the sidebar or popup to view metrics like your current pace and "Days Ahead/Behind."
+>
+> *Note: Due to technical constraints, this extension does not operate on the "New Tab" page of the Genspark browser.*
 
 ### 3. Settings & Parameters
 The values you enter in the settings are used as follows:
