@@ -102,7 +102,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const todayStr = formatDate(today);
       const todayLogs = history.filter(item => formatDate(new Date(item.time)) === todayStr);
 
-      const firstCountToday = todayLogs.length > 0 ? todayLogs[0].count : latest.count;
+      // Use the OLDEST record of the day as the start point (handles cases where multiple entries might exist)
+      const firstCountToday = todayLogs.length > 0 ? todayLogs[todayLogs.length - 1].count : latest.count;
       const currentCount = latest.count;
       const consumed = firstCountToday - currentCount;
 
@@ -574,7 +575,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let html = '';
         if (latest) {
-          const firstCountToday = todayLogs.length > 0 ? todayLogs[0].count : latest.count;
+          // Use the OLDEST record of the day as the start point
+          const firstCountToday = todayLogs.length > 0 ? todayLogs[todayLogs.length - 1].count : latest.count;
           const currentCount = latest.count;
           const consumed = firstCountToday - currentCount;
 

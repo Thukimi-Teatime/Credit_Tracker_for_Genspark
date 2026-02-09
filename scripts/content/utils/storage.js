@@ -56,22 +56,26 @@
                 if (history.length > 0) {
                     try {
                         const lastEntryTime = history[0].time;
-                        const lastEntryDate = lastEntryTime.includes(' ')
-                            ? lastEntryTime.split(' ')[0]
-                            : lastEntryTime.split('T')[0];
+                        const lastEntryDate = new Date(lastEntryTime).toLocaleDateString();
+                        const currentSessionDate = new Date().toLocaleDateString();
 
-                        if (lastEntryDate === todayStr) {
+                        if (lastEntryDate === currentSessionDate) {
                             isFirstToday = false;
                         }
                     } catch (error) {
-                        // Note: Logger might not be fully initialized if called too early, but usually fine
                         if (Logger) Logger.debugWarn('[Credit Tracker for Genspark] Date parsing error:', error);
                         isFirstToday = true;
                     }
                 }
 
                 if (isFirstToday) {
-                    updatedHistory.unshift({ time: fullTimeStr, count: currentCount });
+                    // Carry over the previous "latest" count as the start of this new day
+                    // This captures any consumption that happened before this specific session
+                    const startOfDayCount = (data.latest && typeof data.latest.count === 'number')
+                        ? data.latest.count
+                        : currentCount;
+
+                    updatedHistory.unshift({ time: fullTimeStr, count: startOfDayCount });
                     if (updatedHistory.length > 50) updatedHistory.pop();
                 }
 
